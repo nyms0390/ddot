@@ -669,7 +669,7 @@ class Trainer(object):
         """
         Export data to the disk.
         """
-        samples, _ = self.get_batch(task)
+        samples = self.get_batch(task)
         for info in samples["infos"]:
             samples["infos"][info] = list(map(str, samples["infos"][info].tolist()))
 
@@ -701,6 +701,11 @@ class Trainer(object):
                 trajectory, self.params.float_precision
             )
             outputs["tree"] = samples["tree"][i].prefix()
+
+            f_traj = samples["f_traj"][i].tolist()
+            outputs["f_traj"] = float_list_to_str_lst(
+                f_traj, self.params.float_precision
+            )
 
             self.file_handler_prefix.write(json.dumps(outputs) + "\n")
             self.file_handler_prefix.flush()

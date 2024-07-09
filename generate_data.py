@@ -10,14 +10,14 @@ from distutils import dir_util
 
 exp_folder = 'datagen_final'
 
-dump_path = f'/sb_u0621_liac_scratch/odeformer/experiments'
+dump_path = f'/home/nyms/odeformer/experiments'
 Path(dump_path).mkdir(exist_ok=True)
 
 extra_args = {
     'n_steps_per_epoch':1000,
     'max_epoch':100,
     'ode_integrator':'solve_ivp',
-    'num_workers':60,
+    'num_workers':10,
     'use_queue':False,
     'batch_size':10,
     'min_dimension':1,

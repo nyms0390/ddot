@@ -482,6 +482,8 @@ class FunctionEnvironment(object):
         skeleton_tree, _ = self.generator.function_to_skeleton(tree)
         skeleton_tree_encoded = self.equation_encoder.encode(skeleton_tree)
 
+        f_traj = tree.val(trajectory, times)
+
         if self.equation_encoder.constant_encoder is not None:
             def is_number(s):
                 try:
@@ -513,6 +515,7 @@ class FunctionEnvironment(object):
             "tree":                  tree,
             "skeleton_tree":         skeleton_tree,
             "infos":                 info,
+            "f_traj":                f_traj,
         }
 
         return expr, []
