@@ -543,8 +543,7 @@ class FunctionEnvironment(object):
             
     def _subsample_trajectory(
         self,
-        times: np.ndarray, 
-        trajectory: np.ndarray, 
+        trajectories: List[np.ndarray],
         train: Union[bool, None]=None,
         subsample_ratio: Union[None, float]=None,
         seed: Union[None, int]=None,
@@ -562,13 +561,14 @@ class FunctionEnvironment(object):
                 else self.params.eval_subsample_ratio
             )
         indices_to_remove = rng.choice(
-            trajectory.shape[0], 
-            int(trajectory.shape[0] * subsample_ratio), 
+            trajectories[1].shape[0], 
+            int(trajectories[1].shape[0] * subsample_ratio), 
             replace=False,
         )
-        trajectory = np.delete(trajectory, indices_to_remove, axis=0)
-        times = np.delete(times, indices_to_remove, axis=0)
-        return times, trajectory, subsample_ratio
+        output = []
+        for traj in trajectories:
+            output.append(np.delete(traj, indices_to_remove, axis=0))
+        return output, subsample_ratio
 
     def create_train_iterator(self, task, data_path, params, **args):
         """
@@ -1251,10 +1251,11 @@ class EnvDataset(Dataset):
             sample = self.read_sample()
 
         times, trajectory = sample['times'], sample['trajectory']
+        f_traj = sample['f_traj']
 
         # subsampling
         if self.params.train_subsample_ratio or self.params.eval_subsample_ratio:
-            times, trajectory, subsample_ratio = self.env._subsample_trajectory(times, trajectory, train=self.train)
+            (times, trajectory, f_traj), subsample_ratio = self.env._subsample_trajectory([times, trajectory, f_traj], train=self.train)
         else:
             subsample_ratio = 0
         # output noise added to trajectory
@@ -1269,6 +1270,7 @@ class EnvDataset(Dataset):
         
         sample['times'] = times
         sample['trajectory'] = trajectory
+        sample['f_traj'] = f_traj
 
         return sample
 
@@ -1302,6 +1304,7 @@ class EnvDataset(Dataset):
         x["trajectory"] = str_list_to_float_array(x["trajectory"])
         x["tree"] = self.env.equation_encoder.decode(x["tree"].split(","))
         x["tree_encoded"] = self.env.equation_encoder.encode(x["tree"])
+        x["f_traj"] = str_list_to_float_array(x["f_traj"])
         infos = {}
 
         for col in x.keys():
@@ -1310,6 +1313,7 @@ class EnvDataset(Dataset):
                 "trajectory",
                 "tree",
                 "tree_encoded",
+                "f_traj",
             ]:
                 infos[col] = int(x[col])
         x["infos"] = infos
