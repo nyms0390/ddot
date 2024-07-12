@@ -35,7 +35,7 @@ def main(params):
         wandb.login() 
         wandb.init(
         # set the wandb project where this run will be logged
-        project="sr-for-odes",
+        project="odeformer-with-c-loss-test",
         group=params.exp_name,
         name=params.exp_id,
         # track hyperparameters and run metadata

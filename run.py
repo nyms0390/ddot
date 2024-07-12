@@ -12,7 +12,7 @@ from distutils import dir_util
 exp_folder = 'paper'
 
 #dump_path = f'/home/{user}/odeformer/experiments'
-dump_path = f'/sb_u0621_liac_scratch/odeformer/experiments'
+dump_path = f'/home/310553058/odeformer/experiments'
 Path(dump_path).mkdir(exist_ok=True)
 
 extra_args = {
@@ -23,7 +23,7 @@ extra_args = {
     'print_freq': 30,
     'ode_integrator':'solve_ivp',
     'num_workers':1,
-    'tokens_per_batch':10000,
+    'tokens_per_batch':5000,
     'min_dimension':1,
     'max_dimension':6,
     'float_descriptor_length':3,
@@ -31,12 +31,12 @@ extra_args = {
     'dec_emb_dim':512,
     #'subsample_ratio':0.5,
     'max_points':200,
+    "train_noise_gamma":.1,
+    "train_subsample_ratio":.5,
     }
 
 grid = {
     #'float_descriptor_length':[1,2,3],
-    "train_noise_gamma":[.1],
-    "train_subsample_ratio":[.5],
     #"lr":[4e-4],
     #"sign_as_token":[False],
     #"use_two_hot":[False]

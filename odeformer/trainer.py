@@ -669,7 +669,7 @@ class Trainer(object):
         """
         Export data to the disk.
         """
-        samples, _ = self.get_batch(task)
+        samples = self.get_batch(task)
         for info in samples["infos"]:
             samples["infos"][info] = list(map(str, samples["infos"][info].tolist()))
 

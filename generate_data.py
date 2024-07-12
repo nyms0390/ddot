@@ -10,7 +10,7 @@ from distutils import dir_util
 
 exp_folder = 'datagen_final'
 
-dump_path = f'/sb_u0621_liac_scratch/odeformer/experiments'
+dump_path = f'/home/310553058/odeformer/experiments'
 Path(dump_path).mkdir(exist_ok=True)
 
 extra_args = {
