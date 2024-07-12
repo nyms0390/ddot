@@ -376,9 +376,9 @@ class Trainer(object):
         """
         if self.params.use_wandb and self.params.is_master:
             if self.stats["functions"]:
-                wandb.log({'loss':self.stats["functions"][-1],
-                   'lr': self.optimizer.param_groups[0]["lr"],
-                   })
+                stat = self.stats["functions"][-1]
+                stat['lr'] = self.optimizer.param_groups[0]["lr"]
+                wandb.log(stat)
         if self.n_total_iter % self.params.print_freq != 0:
             return
 
@@ -388,9 +388,16 @@ class Trainer(object):
             [
                 "{}: {:7.4f}".format(k.upper().replace("_", "-"), np.mean(v))
                 for k, v in self.stats.items()
-                if type(v) is list and len(v) > 0
+                if type(v) is list and len(v) > 0 and k is not "functions"
             ]
         )
+        if self.stats["functions"]:
+            s_stat = s_stat + " || ".join(
+                [
+                    "{}: {:7.4f}".format(k.upper().replace("_", "-"), np.mean(v))
+                    for k, v in self.stats["functions"][-1].items()
+                ]
+            )
         for k in self.stats.keys():
             if type(self.stats[k]) is list:
                 del self.stats[k][:]
@@ -894,7 +901,7 @@ class Trainer(object):
                 loss = loss + loss2
 
         stat['loss'] = loss.item()
-        self.stats[task].append(loss.item())
+        self.stats[task].append(stat)
 
         # optimize
         self.optimize(loss)
