@@ -398,4 +398,10 @@ def get_parser():
     parser.add_argument(
         "--nvidia_apex", type=bool_flag, default=False, help="NVIDIA version of apex"
     )
+    parser.add_argument(
+        "--use_ft_decoder",
+        type=bool_flag,
+        default=True,
+        help="Whether to use ft_decoder",
+    )
     return parser

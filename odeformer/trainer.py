@@ -376,9 +376,9 @@ class Trainer(object):
         """
         if self.params.use_wandb and self.params.is_master:
             if self.stats["functions"]:
-                wandb.log({'loss':self.stats["functions"][-1],
-                   'lr': self.optimizer.param_groups[0]["lr"],
-                   })
+                stat = self.stats["functions"][-1]
+                stat['lr'] = self.optimizer.param_groups[0]["lr"]
+                wandb.log(stat)
         if self.n_total_iter % self.params.print_freq != 0:
             return
 
@@ -388,9 +388,16 @@ class Trainer(object):
             [
                 "{}: {:7.4f}".format(k.upper().replace("_", "-"), np.mean(v))
                 for k, v in self.stats.items()
-                if type(v) is list and len(v) > 0
+                if type(v) is list and len(v) > 0 and k is not "functions"
             ]
         )
+        if self.stats["functions"]:
+            s_stat = s_stat + " || ".join(
+                [
+                    "{}: {:7.4f}".format(k.upper().replace("_", "-"), np.mean(v))
+                    for k, v in self.stats["functions"][-1].items()
+                ]
+            )
         for k in self.stats.keys():
             if type(self.stats[k]) is list:
                 del self.stats[k][:]
@@ -702,6 +709,11 @@ class Trainer(object):
             )
             outputs["tree"] = samples["tree"][i].prefix()
 
+            f_traj = samples["f_traj"][i].tolist()
+            outputs["f_traj"] = float_list_to_str_lst(
+                f_traj, self.params.float_precision
+            )
+
             self.file_handler_prefix.write(json.dumps(outputs) + "\n")
             self.file_handler_prefix.flush()
 
@@ -715,14 +727,16 @@ class Trainer(object):
         Encoding / decoding step.
         """
         params = self.params
-        embedder, encoder, decoder = (
+        embedder, encoder, decoder, ft_decoder = (
             self.modules["embedder"],
             self.modules["encoder"],
             self.modules["decoder"],
+            self.modules["ft_decoder"],
         )
         embedder.train()
         encoder.train()
         decoder.train()
+        ft_decoder.train()
         env = self.env
 
         samples = self.get_batch(task)
@@ -734,6 +748,8 @@ class Trainer(object):
         times = samples["times"]
         trajectory = samples["trajectory"]
         infos = samples["infos"]
+
+        stat = {}
 
         if params.max_masked_variables:  # randomly mask some variables
             for seq_id in range(len(times)):
@@ -767,26 +783,59 @@ class Trainer(object):
                 self.env.word_to_idx(samples["tree_encoded"], float_input=False)
             )
 
-        # target words to predict
-        alen = torch.arange(len2.max(), dtype=torch.long, device=len2.device)
-        pred_mask = (
-            alen[:, None] < len2[None] - 1
-        )  # do not predict anything given the last target word
+        def mask_decoder_input(x, length, dimension=None):
+            # target words to predict
+            alen = torch.arange(length.max(), dtype=torch.long, device=length.device)
+            pred_mask = (
+                alen[:, None] < length[None] - 1
+            )  # do not predict anything given the last target word
 
-        y = x2[1:].masked_select(pred_mask[:-1])
-        assert len(y) == (len2 - 1).sum().item()
+            if len(x.shape) == 2:
+                y = x[1:].masked_select(pred_mask[:-1])
+                proposed_len = (length - 1).sum().item()
+            # Handling input x of dimension > 1
+            elif len(x.shape) == 3:
+                assert dimension is not None
+                pred_mask = pred_mask.unsqueeze(0).repeat(x.shape[0], 1, 1)
+                for i, dim in enumerate(dimension):
+                    pred_mask[dim:, :, i] = False
+                y = x[:, 1:].masked_select(pred_mask[:, :-1])
+                pred_mask = pred_mask.reshape(-1, pred_mask.shape[-1])
+                proposed_len = ((length - 1) * dimension).sum().item()
+            assert len(y) == proposed_len
+            return y, pred_mask
         
-        if params.use_two_hot:
-            assert self.env.equation_encoder.constant_encoder is not None
-            y = self.env.ids_to_two_hot(
-                ids=y.reshape(-1, 1), 
-                support_size=len(self.env.equation_words) + len(self.env.constant_words)
-            )
-        
-        # cuda
-        x2, len2, y = to_cuda(x2, len2, y)
+        def embed_f_traj(input):
+            xs = []
+            for seq in input:
+                seq_toks = []
+                for x in seq:
+                    toks = env.float_encoder.encode(sum(x))
+                    seq_toks.append([env.float_word2id[tok] for tok in toks])
+                xs.append(torch.LongTensor(seq_toks))
+
+            pad_id = env.float_word2id["<PAD>"]
+            length = [x.shape[0] for x in xs]
+            dims = [x.shape[1] for x in xs]
+            bs, slen, dim = len(length), max(length), max(dims)
+            sent = torch.LongTensor(slen, bs, dim).fill_(pad_id)
+            for i, seq in enumerate(xs):
+                sent[:length[i], i, :dims[i]] = seq
+            
+            position = torch.arange(slen).repeat(bs, dim, 1).reshape(bs, -1).T
+
+            return sent.permute(2, 0, 1), torch.LongTensor(length), position, torch.LongTensor(dims)
+
+        y2, pred_mask2 = mask_decoder_input(x2, len2)
+        x2, len2, y2 = to_cuda(x2, len2, y2)
+
+        if self.params.use_ft_decoder:
+            f_traj = samples["f_traj"]
+            x3, len3, pos3, dim3 = embed_f_traj(f_traj)
+            y3, pred_mask3 = mask_decoder_input(x3, len3, dim3)
+            x3, len3, y3, pos3 = to_cuda(x3, len3, y3, pos3)
+
         # forward / loss
-
         with autocast_wrapper(params):
             encoded = encoder("fwd", x=x1, lengths=len1, causal=False)
             decoded = decoder(
@@ -797,14 +846,16 @@ class Trainer(object):
                 src_enc=encoded.transpose(0, 1),
                 src_len=len1,
             )
-            _scores, loss = decoder(
-                "predict", tensor=decoded, pred_mask=pred_mask, y=y, get_scores=False
+            _scores, loss1 = decoder(
+                "predict", tensor=decoded, pred_mask=pred_mask2, y=y2
             )
+            loss = loss1
+            stat['loss1'] = loss1.item()
 
             if self.params.masked_output:
                 # randomly mask a fraction x of the input tokens along seq dimension
                 output_mask = torch.rand(x2.shape[:2]) < self.params.masked_output
-                output_mask *= pred_mask
+                output_mask *= pred_mask2
                 predict_output_tokens = x2[output_mask]
                 x2_masked = x2.clone()
                 x2_masked[output_mask] = encoder.word2id['<MASK>']
@@ -818,7 +869,7 @@ class Trainer(object):
                     src_len=len1,
                 )
                 _scores, loss_mlm = decoder(
-                    "predict", tensor=decoded, pred_mask=output_mask, y=predict_output_tokens, get_scores=False
+                    "predict", tensor=decoded, pred_mask=output_mask, y=predict_output_tokens
                 )
                 loss = loss + loss_mlm
 
@@ -832,7 +883,25 @@ class Trainer(object):
                 loss_numeric = F.cross_entropy(scores, targets)
                 loss = loss + loss_numeric
 
-        self.stats[task].append(loss.item())
+            if self.params.use_ft_decoder:
+                decoder_input = x3.reshape(-1, x3.shape[-1])
+                ft_decoded = ft_decoder(
+                    "fwd",
+                    x=decoder_input,
+                    lengths=len3,
+                    causal=True,
+                    src_enc=encoded.transpose(0, 1),
+                    src_len=len1,
+                    positions=pos3,
+                )
+                scores2, loss2 = ft_decoder(
+                    "predict", tensor=ft_decoded, pred_mask=pred_mask3, y=y3
+                )
+                stat['loss2'] = loss2.item()
+                loss = loss + loss2
+
+        stat['loss'] = loss.item()
+        self.stats[task].append(stat)
 
         # optimize
         self.optimize(loss)
