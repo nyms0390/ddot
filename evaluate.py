@@ -543,8 +543,7 @@ class Evaluator(object):
                     samples['tree'] = [self.str_to_tree(" | ".join(_sample["substituted"][solution_i]))]
                     iterator.append(samples)
                 except Exception as e:
-                    print(sample_i, solution_i)
-                    print(e)
+                    pass
                 
         return iterator
             
