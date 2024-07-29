@@ -74,14 +74,15 @@ def build_modules(env, params):
         positional_embeddings=params.dec_positional_embeddings,
     )
 
-    modules["ft_decoder"] = TransformerModel(
-        params,
-        dec_id2word,
-        is_encoder=False,
-        with_output=True,
-        use_prior_embeddings=False,
-        positional_embeddings=params.dec_positional_embeddings,
-    )
+    if params.use_ft_decoder:
+        modules["ft_decoder"] = TransformerModel(
+            params,
+            dec_id2word,
+            is_encoder=False,
+            with_output=True,
+            use_prior_embeddings=False,
+            positional_embeddings=params.dec_positional_embeddings,
+        )
 
     # reload pretrained modules
     if params.reload_model != "":

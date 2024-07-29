@@ -263,9 +263,8 @@ class Evaluator(object):
                     trajectory += noise
 
                 if self.params.eval_subsample_ratio:
-                    time, trajectory, subsample_ratio = self.env._subsample_trajectory(
-                        time,
-                        trajectory,
+                    (time, trajectory), subsample_ratio = self.env._subsample_trajectory(
+                        [time, trajectory],
                         subsample_ratio=self.params.eval_subsample_ratio,
                         seed=self.params.test_env_seed,
                     )
@@ -308,6 +307,7 @@ class Evaluator(object):
         batch_results = pd.DataFrame.from_dict(batch_results)
 
         save_file = os.path.join(self.save_path, f"eval_{name}.csv")
+        self.trainer.logger.info(f'save file: {save_file}')
 
         batch_results.to_csv(save_file, index=False)
         self.trainer.logger.info("Saved {} equations to {}".format(len(batch_results), save_file))
@@ -550,7 +550,7 @@ class Evaluator(object):
             
     
     def evaluate_on_file(self, path: str, save: bool, seed: Union[None, int]):
-        _filename = Path(path).name
+        _filename = Path(path).stem
         if path.endswith(".pkl"):
             # read pickle file which is assumed to have correct format
             with open(path, "rb") as fpickle:
@@ -559,11 +559,11 @@ class Evaluator(object):
             iterator = self.read_equations_from_json_file(path=path, save=save)
         else:
             iterator = self.read_equations_from_txt_file(path=path, save=save, seed=seed)
-        if save:
-            save_file = os.path.join(self.save_path, f"eval_{_filename}.csv")
-        else:
-            save_file = None
-        return self.evaluate_on_iterator(iterator, save_file)
+        # if save:
+        #     save_file = os.path.join(self.save_path, f"eval_{_filename}.csv")
+        # else:
+        #     save_file = None
+        return self.evaluate_on_iterator(iterator, _filename)
                     
 
 def main(params):

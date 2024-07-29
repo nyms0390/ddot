@@ -165,6 +165,7 @@ def main(params):
             sorting_metric=params.sorting_metric,
         )
     elif params.baseline_model in ["odeformer", "odeformer_opt", "odeformer_opt_random"]:
+        params.from_pretrained = True
         model = setup_odeformer(trainer)
     else:
         raise ValueError(f"Unknown model: {params.baseline_model}")
@@ -244,9 +245,10 @@ if __name__ == "__main__":
         dataset_name = Path(params.dataset).stem
     params.validation_metrics = 'r2,r2_zero,snmse,accuracy_l1_1e-1,accuracy_l1_1e-3,accuracy_l1_biggio,is_valid,complexity_sympy,relative_complexity_sympy,complexity_string,relative_complexity_string' # complexity,term_difference,term_difference_sympy
     params.eval_only = True
-    params.cpu = True
+    # params.cpu = True
     params.max_dimension = 5
     params.evaluation_task = params.e_task
+    params.reload_data = ""
     # params.eval_size = 2
     
     if not hasattr(params, "subsample_ratio"):

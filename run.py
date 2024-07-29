@@ -16,14 +16,14 @@ dump_path = f'/home/310553058/odeformer/experiments'
 Path(dump_path).mkdir(exist_ok=True)
 
 extra_args = {
-    'reload_data':dump_path + "/datagen_final/datagen_use_sympy_True",
+    'reload_data':dump_path + "/datagen_ftraj/datagen_use_sympy_True",
     'use_wandb':True,
     'collate_queue_size': 1000,
     #'n_steps_per_epoch':1000,
     'print_freq': 30,
     'ode_integrator':'solve_ivp',
     'num_workers':1,
-    'tokens_per_batch':5000,
+    'tokens_per_batch':3800,
     'min_dimension':1,
     'max_dimension':6,
     'float_descriptor_length':3,
@@ -36,6 +36,7 @@ extra_args = {
     }
 
 grid = {
+    "use_ft_decoder":[True]
     #'float_descriptor_length':[1,2,3],
     #"lr":[4e-4],
     #"sign_as_token":[False],

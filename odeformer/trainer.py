@@ -727,16 +727,19 @@ class Trainer(object):
         Encoding / decoding step.
         """
         params = self.params
-        embedder, encoder, decoder, ft_decoder = (
+        embedder, encoder, decoder = (
             self.modules["embedder"],
             self.modules["encoder"],
             self.modules["decoder"],
-            self.modules["ft_decoder"],
         )
         embedder.train()
         encoder.train()
         decoder.train()
-        ft_decoder.train()
+
+        if params.use_ft_decoder:
+            ft_decoder = self.modules["ft_decoder"]
+            ft_decoder.train()
+            
         env = self.env
 
         samples = self.get_batch(task)

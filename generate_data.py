@@ -8,7 +8,7 @@ from pathlib import Path
 import shutil
 from distutils import dir_util
 
-exp_folder = 'datagen_final'
+exp_folder = 'datagen_ftraj'
 
 dump_path = f'/home/310553058/odeformer/experiments'
 Path(dump_path).mkdir(exist_ok=True)

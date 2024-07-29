@@ -9,15 +9,15 @@ import shutil
 from distutils import dir_util
 #user = os.getlogin()
 
-exp_folder = 'final_evals_3'
+exp_folder = 'paper'
 
 #dump_path = f'/home/{user}/odeformer/experiments'
-dump_path = f'/sb_u0621_liac_scratch/odeformer/experiments'
+dump_path = f'/home/310553058/odeformer/experiments'
 Path(dump_path).mkdir(exist_ok=True)
 
 extra_args = {
-    'reload_data':dump_path + "/datagen_final/datagen_use_sympy_True",
-    'reload_checkpoint':dump_path + "/no_subsampling/exp_train_noise_gamma_0.1_train_subsample_ratio_0.5/",
+    'reload_data':dump_path + "/datagen_ftraj/datagen_use_sympy_True",
+    'reload_checkpoint':dump_path + "/paper/exp_use_ft_decoder_True",
     'beam_size':10,
     'eval_size':10000,
     'batch_size_eval':16,
@@ -29,7 +29,7 @@ grid = {
     "eval_noise_gamma":[0.0],
     "eval_subsample_ratio":[0.5],
     #"beam_temperature":[0.1,0.3],
-    "beam_size":[1,10,50],
+    "beam_size":[1],
 }
 
 def get_free_gpus():
@@ -94,7 +94,7 @@ for i, params in enumerate(dict_product(grid)):
        if f.endswith('.py'):
            shutil.copy2(f, job_dir)
     dir_util.copy_tree('odeformer', os.path.join(job_dir,'odeformer'))
-    dir_util.copy_tree('invar_datasets', os.path.join(job_dir,'invar_datasets'))
+    # dir_util.copy_tree('invar_datasets', os.path.join(job_dir,'invar_datasets'))
     os.chdir(job_dir)
 
     logfile = os.path.join(job_dir,'train.log')
