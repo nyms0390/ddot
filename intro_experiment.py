@@ -166,50 +166,54 @@ def fit(samples):
     )
     predicted_trees = [tree.infix() if hasattr(tree, 'infix') else tree for tree in best_candidates]
     predicted_trees = evaluator.str_to_tree(predicted_trees[0])
-    return predicted_trees
+    return best_results, best_candidates, predicted_trees
 
 # %%
-fig_vec, axes_vec = plt.subplots(6, 7, figsize=(15, 15), sharex=True, sharey=True)
-fig_div, axes_div = plt.subplots(6, 7, figsize=(15, 15), sharex=True, sharey=True)
-# fig_grad, axes_grad = plt.subplots(6, 7, figsize=(15, 15), sharex=True, sharey=True)
-count = 0
+def main():
+    fig_vec, axes_vec = plt.subplots(2, 7, figsize=(15, 5), sharex=True, sharey=True)
+    fig_div, axes_div = plt.subplots(2, 7, figsize=(15, 5), sharex=True, sharey=True)
+    # fig_grad, axes_grad = plt.subplots(6, 7, figsize=(15, 15), sharex=True, sharey=True)
+    count = 0
 
-for idx, sample in enumerate(iterator):
-    # Define the limits for each dimension and the number of points
-    dim = sample["infos"]["dimension"][0]
-    limits = [(-2, 2)] * dim
-    num_points = 21
-    
-    # Create the grid and flatten the coordinates
-    mesh = create_nd_grid(limits, num_points)
-    flat_coord = flatten_grid(mesh)
-    spacing = [(lim[1] - lim[0]) / (num_points - 1) for lim in limits]
-    grid_shape = [num_points] * len(limits)
-
-    # 
-    org_tree = sample["tree"][0]
-    org_np_fn = tree_to_numexpr_fn(org_tree)
-
-    org_vector_field = evaluate_vector_field(org_np_fn, flat_coord, grid_shape)
-    org_div = divergence(org_vector_field, spacing)
-
-    #
-    pred_tree = fit(sample)
-    pred_np_fn = tree_to_numexpr_fn(pred_tree)
-
-    pred_vector_field = evaluate_vector_field(pred_np_fn, flat_coord, grid_shape)
-    pred_div = divergence(pred_vector_field, spacing)
-
-    # Plot the vector field for the first two dimensions
-    if dim > 1 and idx % 4 == 0:
-        print(f'idx: {idx}')
-        plot_vector_field(axes_vec[count//7][count%7], f"ODE: {idx//4+1}", mesh, org_vector_field, dims=(0, 1))
-        plot_vector_field(axes_vec[count//7+1][count%7], f"ODE: {idx//4+1}", mesh, pred_vector_field, dims=(0, 1))
+    for idx, sample in enumerate(iterator):
+        # Define the limits for each dimension and the number of points
+        dim = sample["infos"]["dimension"][0]
+        limits = [(-2, 2)] * dim
+        num_points = 21
         
-        plot_divergence(axes_div[count//7][count%7], f"ODE: {idx//4+1}", mesh, org_div, dims=(0, 1))
-        plot_divergence(axes_div[count//7+1][count%7], f"ODE: {idx//4+1}", mesh, pred_div, dims=(0, 1))
+        # Create the grid and flatten the coordinates
+        mesh = create_nd_grid(limits, num_points)
+        flat_coord = flatten_grid(mesh)
+        spacing = [(lim[1] - lim[0]) / (num_points - 1) for lim in limits]
+        grid_shape = [num_points] * len(limits)
 
-        count += 1
-# plt.tight_layout()
-plt.show()
+        # 
+        org_tree = sample["tree"][0]
+        org_np_fn = tree_to_numexpr_fn(org_tree)
+
+        org_vector_field = evaluate_vector_field(org_np_fn, flat_coord, grid_shape)
+        org_div = divergence(org_vector_field, spacing)
+
+        #
+        _, _, pred_tree = fit(sample)
+        
+        pred_np_fn = tree_to_numexpr_fn(pred_tree)
+        pred_vector_field = evaluate_vector_field(pred_np_fn, flat_coord, grid_shape)
+        pred_div = divergence(pred_vector_field, spacing)
+
+        # Plot the vector field for the first two dimensions
+        if dim > 1 and idx % 4 == 0:
+            print(f'idx: {idx}')
+            plot_vector_field(axes_vec[count//7][count%7], f"ODE: {idx//4+1}", mesh, org_vector_field, dims=(0, 1))
+            plot_vector_field(axes_vec[count//7+1][count%7], f"ODE: {idx//4+1}", mesh, pred_vector_field, dims=(0, 1))
+            
+            plot_divergence(axes_div[count//7][count%7], f"ODE: {idx//4+1}", mesh, org_div, dims=(0, 1))
+            plot_divergence(axes_div[count//7+1][count%7], f"ODE: {idx//4+1}", mesh, pred_div, dims=(0, 1))
+
+            count += 1
+    # plt.tight_layout()
+    plt.show()
+
 # %%
+if __name__ == "__main__":
+    main()
