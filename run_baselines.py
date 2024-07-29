@@ -1,9 +1,9 @@
 from evaluate import *
-from odeformer.baselines.ffx_wrapper import FFXWrapper
+# from odeformer.baselines.ffx_wrapper import FFXWrapper
 from odeformer.baselines.pysr_wrapper import PySRWrapper
-from odeformer.baselines.ellyn_wrapper import (
-   AFPWrapper, EHCWrapper, EPLEXWrapper, FEAFPWrapper,
-)
+# from odeformer.baselines.ellyn_wrapper import (
+#    AFPWrapper, EHCWrapper, EPLEXWrapper, FEAFPWrapper,
+# )
 from odeformer.baselines.proged_wrapper import ProGEDWrapper
 from odeformer.baselines.sindy_wrapper import SINDyWrapper
 import os
@@ -206,7 +206,7 @@ if __name__ == "__main__":
             "odeformer", "odeformer_opt", "odeformer_opt_random"
         ]
     )
-    parser.add_argument("--dataset", type=str, choices=["strogatz", "oscillators", "<path_to_dataset>"], 
+    parser.add_argument("--dataset", type=str, choices=["strogatz", "oscillators", "odebench", "<path_to_dataset>"], 
         # default="/p/project/hai_microbio/sb/repos/odeformer/datasets/strogatz_extended/strogatz_extended.json"
         # default="oscillators"
         default="strogatz"
@@ -224,7 +224,7 @@ if __name__ == "__main__":
         help = "If not None, sort pareto front according to this metric before selecting the final, best model."
     )
     parser.add_argument("--e_task",# this overwrites --evaluation_task from parser.py
-        type=str, choices=["interpolation", "forecasting", "y0_generalization"], default="interpolation",
+        type=str, choices=["interpolation", "forecasting", "y0_generalization"], default="y0_generalization",
     )
     params = parser.parse_args()
     if params.dataset == "strogatz":
@@ -238,6 +238,12 @@ if __name__ == "__main__":
         params.eval_on_file = False
         params.eval_on_oscillators = True
         dataset_name = "oscillators"
+    elif params.dataset == "odebench":
+        params.eval_on_file = "datasets/strogatz_extended.json"
+        params.eval_on_oscillators = False
+        params.eval_on_pmlb = False
+        params.random_seed = 23
+        dataset_name = params.dataset
     else:
         params.eval_on_pmlb = False
         params.eval_on_oscillators = False
@@ -262,10 +268,10 @@ if __name__ == "__main__":
         BASE, 
         params.baseline_model,
         dataset_name,
-        f"hyper_opt_{params.optimize_hyperparams}",
-        f"baseline_hyper_opt_eval_fraction_{params.hyper_opt_eval_fraction}",
-        f"subsample_ratio_{float(params.subsample_ratio)}",
-        f"eval_noise_type_{params.eval_noise_type}",
+        # f"hyper_opt_{params.optimize_hyperparams}",
+        # f"baseline_hyper_opt_eval_fraction_{params.hyper_opt_eval_fraction}",
+        # f"subsample_ratio_{float(params.subsample_ratio)}",
+        # f"eval_noise_type_{params.eval_noise_type}",
         f"eval_gamma_noise_{float(params.eval_noise_gamma)}",
         f"evaluation_task_{params.evaluation_task}",
         # f"baseline_to_sympy_{params.baseline_to_sympy}",
