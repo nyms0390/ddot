@@ -591,42 +591,82 @@ def main(params):
     model = setup_odeformer(trainer)
     evaluator = Evaluator(trainer, model)  
 
-
+    logger.info(f'dataset: {params.dataset}')
+    logger.info(f'eval: {params.eval_in_domain}, {params.eval_on_pmlb}, {params.eval_on_file}')
     if params.eval_in_domain:
       scores = evaluator.evaluate_in_domain("functions")
       logger.info("__log__:%s" % json.dumps(scores))
 
     if params.eval_on_pmlb:
-        scores = evaluator.evaluate_on_pmlb()
+        scores = evaluator.evaluate_on_pmlb(path_dataset=params.path_dataset)
         logger.info("__pmlb__:%s" % json.dumps(scores))
         # scores = evaluator.evaluate_on_oscillators()
         # logger.info("__oscillators__:%s" % json.dumps(scores))
     
-    if params.eval_on_file is not None:
-        evaluator.evaluate_on_file(path=params.eval_on_file, seed=params.test_env_seed)
+    if params.eval_on_file:
+        scores = evaluator.evaluate_on_file(path=params.eval_on_file, save=params.save_results, seed=23)
 
 
 if __name__ == "__main__":
 
     parser = get_parser()
+    parser.add_argument("--dataset", type=str, choices=["strogatz", "oscillators", "odebench", "<path_to_dataset>"], 
+        default="strogatz"
+    )
+    parser.add_argument("--baseline_model", type=str, default="ddot",
+        choices=["ddot", "odeformer"],
+    )
     params = parser.parse_args()
 
-    if params.reload_checkpoint:
-        pk = pickle.load(open(params.reload_checkpoint + "/params.pkl", "rb"))
-        pickled_args = pk.__dict__
-        for p in params.__dict__:
-            if p in pickled_args and p not in ["eval_dump_path", "dump_path", "reload_checkpoint", "rescale", "validation_metrics", "eval_in_domain", "eval_on_pmlb", "batch_size_eval", "beam_size", "beam_selection_metric", "subsample_prob", "eval_noise_gamma", "eval_subsample_ratio", "use_wandb", "eval_size", "reload_data"]:
-                params.__dict__[p] = pickled_args[p]
+    if params.baseline_model == "ddot":
+        params.reload_checkpoint = "/home/310553058/odeformer/experiments/paper/exp_use_ft_decoder_True"
+    elif params.baseline_model == "odeformer":
+        params.reload_checkpoint = "/home/310553058/odeformer/experiments/paper/exp_use_ft_decoder_False"
 
+    pk = pickle.load(open(params.reload_checkpoint + "/params.pkl", "rb"))
+    pickled_args = pk.__dict__
+    for p in params.__dict__:
+        if p in pickled_args and p not in ["eval_dump_path", "dump_path", "reload_checkpoint", "rescale", "validation_metrics", "eval_in_domain", "eval_on_pmlb", "batch_size_eval", "beam_size", "beam_selection_metric", "subsample_prob", "eval_noise_gamma", "eval_subsample_ratio", "use_wandb", "eval_size", "reload_data"]:
+            params.__dict__[p] = pickled_args[p]
+
+    if params.dataset == "strogatz":
+        params.eval_in_domain = False
+        params.eval_on_file = False
+        params.eval_on_oscillators = False
+        params.eval_on_pmlb = True
+        params.path_dataset = "/home/310553058/odeformer/datasets/strogatz.pkl"
+        dataset_name = params.dataset
+    elif params.dataset == "odebench":
+        params.eval_in_domain = False
+        params.eval_on_file = "/home/310553058/odeformer/datasets/strogatz_extended.json"
+        params.eval_on_oscillators = False
+        params.eval_on_pmlb = False
+        dataset_name = params.dataset
+    else:
+        params.eval_on_pmlb = False
+        params.eval_on_oscillators = False
+        params.eval_on_file = params.dataset
+        dataset_name = Path(params.dataset).stem
+
+    params.dump_path = os.path.join(
+        "experiments", 
+        params.baseline_model,
+        dataset_name,
+        f"eval_gamma_noise_{float(params.eval_noise_gamma)}",
+        f"evaluation_task_{params.evaluation_task}",
+    )
     if params.eval_dump_path is None:
         params.eval_dump_path = Path(params.dump_path) / "new_evals"
         if not os.path.isdir(params.eval_dump_path):
             os.makedirs(params.eval_dump_path)
+            
+    Path(params.dump_path).mkdir(exist_ok=True, parents=True)
+    Path(params.eval_dump_path).mkdir(exist_ok=True, parents=True)
 
     params.is_slurm_job = False
     params.local_rank = -1
     params.master_port = -1
-    params.eval_on_file = None 
+    # params.eval_on_file = None 
 
     torch.save(params, os.path.join(params.dump_path, "params.pkl"))
 
