@@ -5,9 +5,9 @@
 # conda activate odeformer39
 
 MODELS=(
-    "ddot"
-    "odeformer"
+    "odeformer" "ddot"
 )
+    #
 
 datasets=("strogatz" "odebench")
 eval_noise_gamma=("0" "0.01" "0.02" "0.03" "0.04" "0.05") #  

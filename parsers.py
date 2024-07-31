@@ -332,7 +332,7 @@ def get_parser():
     parser.add_argument(
         "--evaluation_task",
         type=str,
-        default="y0_generalization",
+        default="interpolation",
         help="What task we should consider to evaluate the model",
     )
     parser.add_argument("--beam_selection_metric", type=str, default='r2_zero', help='Metric to use for beam search selection')

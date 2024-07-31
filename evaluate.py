@@ -543,8 +543,7 @@ class Evaluator(object):
                     samples['tree'] = [self.str_to_tree(" | ".join(_sample["substituted"][solution_i]))]
                     iterator.append(samples)
                 except Exception as e:
-                    print(sample_i, solution_i)
-                    print(e)
+                    pass
                 
         return iterator
             
@@ -591,20 +590,15 @@ def main(params):
     model = setup_odeformer(trainer)
     evaluator = Evaluator(trainer, model)  
 
-    logger.info(f'dataset: {params.dataset}')
-    logger.info(f'eval: {params.eval_in_domain}, {params.eval_on_pmlb}, {params.eval_on_file}')
+    logger.info(f'model: {params.baseline_model}, dataset: {params.dataset}, noise: {params.eval_noise_gamma}')
     if params.eval_in_domain:
-      scores = evaluator.evaluate_in_domain("functions")
-      logger.info("__log__:%s" % json.dumps(scores))
-
+        scores = evaluator.evaluate_in_domain("functions")
     if params.eval_on_pmlb:
         scores = evaluator.evaluate_on_pmlb(path_dataset=params.path_dataset)
-        logger.info("__pmlb__:%s" % json.dumps(scores))
-        # scores = evaluator.evaluate_on_oscillators()
-        # logger.info("__oscillators__:%s" % json.dumps(scores))
-    
     if params.eval_on_file:
         scores = evaluator.evaluate_on_file(path=params.eval_on_file, save=params.save_results, seed=23)
+
+    logger.info("__log__:%s" % json.dumps(scores))
 
 
 if __name__ == "__main__":
@@ -626,7 +620,7 @@ if __name__ == "__main__":
     pk = pickle.load(open(params.reload_checkpoint + "/params.pkl", "rb"))
     pickled_args = pk.__dict__
     for p in params.__dict__:
-        if p in pickled_args and p not in ["eval_dump_path", "dump_path", "reload_checkpoint", "rescale", "validation_metrics", "eval_in_domain", "eval_on_pmlb", "batch_size_eval", "beam_size", "beam_selection_metric", "subsample_prob", "eval_noise_gamma", "eval_subsample_ratio", "use_wandb", "eval_size", "reload_data"]:
+        if p in pickled_args and p not in ["eval_dump_path", "dump_path", "reload_checkpoint", "rescale", "validation_metrics", "eval_in_domain", "eval_on_pmlb", "batch_size_eval", "beam_size", "beam_selection_metric", "subsample_prob", "eval_noise_gamma", "eval_subsample_ratio", "use_wandb", "eval_size", "reload_data", "evaluation_task"]:
             params.__dict__[p] = pickled_args[p]
 
     if params.dataset == "strogatz":
@@ -643,10 +637,9 @@ if __name__ == "__main__":
         params.eval_on_pmlb = False
         dataset_name = params.dataset
     else:
+        params.eval_in_domain = True
         params.eval_on_pmlb = False
-        params.eval_on_oscillators = False
-        params.eval_on_file = params.dataset
-        dataset_name = Path(params.dataset).stem
+        params.eval_on_file = False
 
     params.dump_path = os.path.join(
         "experiments", 
