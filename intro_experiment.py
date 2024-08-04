@@ -85,10 +85,14 @@ def flatten_grid(mesh):
     flat_coord = np.array([g.flatten() for g in mesh]).T
     return flat_coord
 
-def evaluate_vector_field(func, flat_coord, grid_shape):
+def compute_vector_field(func, flat_coord, grid_shape):
     out = func(flat_coord, [0])
     reshaped_out = [out[:, i].reshape(grid_shape) for i in range(out.shape[1])]
     return np.array(reshaped_out)
+
+def compute_divergence(f, sp):
+    num_dims = len(f)
+    return np.ufunc.reduce(np.add, [np.gradient(f[i], sp[i], axis=i) for i in range(num_dims)])
 
 def plot_vector_field(ax, title, mesh, vector_field, dims=(0, 1)):
     slice_idx = [0] * (len(mesh) - 2)
@@ -110,10 +114,6 @@ def plot_divergence(ax, title, mesh, divergence_field, dims=(0, 1)):
     
     ax.imshow(div, extent=(X.min(), X.max(), Y.min(), Y.max()), origin='lower', cmap='RdBu')
     ax.set_title(title)
-
-def divergence(f, sp):
-    num_dims = len(f)
-    return np.ufunc.reduce(np.add, [np.gradient(f[i], sp[i], axis=i) for i in range(num_dims)])
 
 # %%
 def corrupt_training_data(times, trajectories):
@@ -191,15 +191,15 @@ def main():
         org_tree = sample["tree"][0]
         org_np_fn = tree_to_numexpr_fn(org_tree)
 
-        org_vector_field = evaluate_vector_field(org_np_fn, flat_coord, grid_shape)
-        org_div = divergence(org_vector_field, spacing)
+        org_vector_field = compute_vector_field(org_np_fn, flat_coord, grid_shape)
+        org_div = compute_divergence(org_vector_field, spacing)
 
         #
         _, _, pred_tree = fit(sample)
         
         pred_np_fn = tree_to_numexpr_fn(pred_tree)
-        pred_vector_field = evaluate_vector_field(pred_np_fn, flat_coord, grid_shape)
-        pred_div = divergence(pred_vector_field, spacing)
+        pred_vector_field = compute_vector_field(pred_np_fn, flat_coord, grid_shape)
+        pred_div = compute_divergence(pred_vector_field, spacing)
 
         # Plot the vector field for the first two dimensions
         if dim > 1 and idx % 4 == 0:

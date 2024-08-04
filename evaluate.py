@@ -562,8 +562,7 @@ class Evaluator(object):
             save_file = os.path.join(self.save_path, f"eval_{_filename}.csv")
         else:
             save_file = None
-        return self.evaluate_on_iterator(iterator, save_file)
-                    
+        return self.evaluate_on_iterator(iterator, save_file)           
 
 def main(params):
 
