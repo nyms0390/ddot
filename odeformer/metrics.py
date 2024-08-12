@@ -13,6 +13,7 @@ import numpy as np
 import scipy
 import sympy
 from odeformer.envs.generators import Node, NodeList, tree_to_numexpr_fn
+from odeformer.envs.generators import Node, NodeList, tree_to_numexpr_fn
 
 def get_complexity(expr: sympy.core.Expr):
     # taken from: https://github.com/cavalab/srbench/blob/master/postprocessing/symbolic_utils.py#L12:L16
@@ -450,6 +451,15 @@ def min_edit_distance(s1, s2):
                 dp[i][j] = 1 + min(dp[i][j-1], dp[i-1][j], dp[i-1][j-1])
 
     return dp[m][n]
+
+def compute_vector_field(func, flat_coord, grid_shape):
+    out = func(flat_coord, [0])
+    reshaped_out = [out[:, i].reshape(grid_shape) for i in range(out.shape[1])]
+    return np.array(reshaped_out)
+
+def compute_divergence(f, sp):
+    num_dims = len(f)
+    return np.ufunc.reduce(np.add, [np.gradient(f[i], sp[i], axis=i) for i in range(num_dims)])
 
 def compute_vector_field(func, flat_coord, grid_shape):
     out = func(flat_coord, [0])

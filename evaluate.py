@@ -544,6 +544,7 @@ class Evaluator(object):
                     iterator.append(samples)
                 except Exception as e:
                     pass
+                    pass
                 
         return iterator
             
