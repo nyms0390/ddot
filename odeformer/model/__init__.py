@@ -89,7 +89,7 @@ def build_modules(env, params):
         logger.info(f"Reloading modules from {params.reload_model} ...")
         reloaded = torch.load(params.reload_model)
         for k, v in modules.items():
-            assert k in reloaded
+            assert k in reloaded, f"missing {k}"
             if all([k2.startswith("module.") for k2 in reloaded[k].keys()]):
                 reloaded[k] = {
                     k2[len("module.") :]: v2 for k2, v2 in reloaded[k].items()

@@ -12,7 +12,7 @@ import regex
 import numpy as np
 import scipy
 import sympy
-from odeformer.envs.generators import Node, NodeList
+from odeformer.envs.generators import Node, NodeList, tree_to_numexpr_fn
 
 def get_complexity(expr: sympy.core.Expr):
     # taken from: https://github.com/cavalab/srbench/blob/master/postprocessing/symbolic_utils.py#L12:L16
@@ -389,6 +389,46 @@ def compute_metrics(predicted, true, predicted_tree=None, tree=None, metrics="r2
                         missing.append(sum([1 for term in terms if term not in pred_terms])/len(terms))
                         extra.append(sum([1 for term in pred_terms if term not in terms])/len(terms))
                     results[metric].append(np.mean(missing) + np.mean(extra))
+
+        elif metric == "divergence":
+
+            def replace_invalid_value(array):
+                array[np.isnan(array)] = 0
+                array[np.isinf(array)] = 0
+                array[np.isneginf(array)] = 0
+                return array
+            
+            def rlmse(org, pred):
+                return np.sqrt(np.log2(np.square(org - pred).mean()))
+            
+            for i in range(len(predicted_tree)):
+                if predicted_tree[i] is None or tree[i] is None or len(predicted_tree[i].nodes) != len(tree[i].nodes) or len(tree[i].nodes) == 1:
+                    results[metric].append(np.nan)
+                else:
+                    dim = len(predicted_tree[i].nodes)
+                    limits = [(0, 10)] * dim
+                    n_points = 101
+                    spacing = [(lim[1] - lim[0]) / (n_points - 1) for lim in limits]
+
+                    grids = [np.linspace(lim[0], lim[1], n_points) for lim in limits]
+                    mesh = np.meshgrid(*grids)
+                    grid_shape = [n_points] * len(limits)
+                    flatten_grid = np.array([g.flatten() for g in mesh]).T
+
+                    org_np_fn = tree_to_numexpr_fn(tree[i])
+                    org_vector_field = compute_vector_field(org_np_fn, flatten_grid, grid_shape)
+                    org_div = compute_divergence(org_vector_field, spacing)
+
+                    pred_np_fn = tree_to_numexpr_fn(predicted_tree[i])
+                    pred_vector_field = compute_vector_field(pred_np_fn, flatten_grid, grid_shape)
+                    pred_div = compute_divergence(pred_vector_field, spacing)
+
+                    org_div = replace_invalid_value(org_div)
+                    pred_div = replace_invalid_value(pred_div)
+
+                    error = rlmse(org_div, pred_div)
+                    results[metric].append(error)
+
         else:
             raise NotImplementedError("Metric {} not implemented".format(metric))
 
@@ -410,3 +450,12 @@ def min_edit_distance(s1, s2):
                 dp[i][j] = 1 + min(dp[i][j-1], dp[i-1][j], dp[i-1][j-1])
 
     return dp[m][n]
+
+def compute_vector_field(func, flat_coord, grid_shape):
+    out = func(flat_coord, [0])
+    reshaped_out = [out[:, i].reshape(grid_shape) for i in range(out.shape[1])]
+    return np.array(reshaped_out)
+
+def compute_divergence(f, sp):
+    num_dims = len(f)
+    return np.ufunc.reduce(np.add, [np.gradient(f[i], sp[i], axis=i) for i in range(num_dims)])

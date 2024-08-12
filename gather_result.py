@@ -13,8 +13,9 @@ def evaluate(filepath):
     acc = df['accuracy_l1_biggio'].mean()
     acc_r2_09 = df['r2_tol'].sum() / df['r2_tol'].count()
     time = df['duration_fit'].mean()
+    div = df['divergence'].mean()
 
-    return {"R2": r2, "Accuracy": acc, "P(R2>.9)": acc_r2_09, "Inference time": time}
+    return {"R2": r2, "P(R2>.9)": acc_r2_09, "Inference time": time, "Divergence": div}
 
 # %%
 def create_table(files, title):
@@ -39,10 +40,10 @@ def create_table(files, title):
 # %%
 root = "/home/310553058/odeformer/experiments"
 baselines = ["ddot", "odeformer"] # 
-datasets = ["odebench", "strogatz"]
+datasets = ["odebench"] #, "strogatz"
 noise_gamma = ["0.0", "0.01", "0.02", "0.03", "0.04", "0.05"]
 beam_size = ["50"] # "1", "10", "20", "100"
-eval_task = "interpolation" #"y0_generalization"
+eval_task = "y0_generalization" #"interpolation"
 
 # for bs in beam_size:
 #     for baseline in baselines:

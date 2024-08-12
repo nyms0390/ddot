@@ -640,6 +640,7 @@ if __name__ == "__main__":
         params.eval_in_domain = True
         params.eval_on_pmlb = False
         params.eval_on_file = False
+        dataset_name = "domain"
 
     params.dump_path = os.path.join(
         "experiments", 
