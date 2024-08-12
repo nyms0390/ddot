@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import pickle
 import heapq
-from intro_experiment import fit
+from visualize_div import fit
 
 path = 'datasets/anesthesia.pkl'
 with open(path, "rb") as fpickle:
