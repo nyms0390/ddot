@@ -190,7 +190,6 @@ class Evaluator(object):
                     best_results[k].append(np.nan)
                 best_candidates.append(None)
                 continue
-            best_results["pareto_front"].append(candidates)
             time, idx = sorted(time), np.argsort(time)
             trajectory = trajectory[idx]
             if isinstance(candidates, List):
@@ -201,6 +200,14 @@ class Evaluator(object):
             if isinstance(best_candidate, str) and (not hasattr(self.params, "convert_prediction_to_tree") or self.params.convert_prediction_to_tree):
                 try: best_candidate = self.str_to_tree(best_candidate)
                 except: pass
+            if isinstance(best_candidate, NodeList):
+                if any([node is None for node in best_candidate.nodes]):
+                    for k in best_results:
+                        best_results[k].append(np.nan)
+                    best_candidates.append(None)
+                    continue
+            best_results["pareto_front"].append(candidates)
+            
             pred_trajectory = self.model.integrate_prediction(time, y0=trajectory[0], prediction=best_candidate)
             if not hasattr(self.params, "convert_prediction_to_tree") or self.params.convert_prediction_to_tree:
                 try: best_candidate = self.env.simplifier.simplify_tree(best_candidate, expand=True)

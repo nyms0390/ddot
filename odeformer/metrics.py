@@ -402,7 +402,12 @@ def compute_metrics(predicted, true, predicted_tree=None, tree=None, metrics="r2
                 return np.sqrt(np.log2(np.square(org - pred).mean()))
             
             for i in range(len(predicted_tree)):
-                if predicted_tree[i] is None or tree[i] is None or len(predicted_tree[i].nodes) != len(tree[i].nodes) or len(tree[i].nodes) == 1:
+                if predicted_tree[i] is None \
+                    or tree[i] is None \
+                    or isinstance(predicted_tree[i], str) \
+                    or len(predicted_tree[i].nodes) != len(tree[i].nodes) \
+                    or len(tree[i].nodes) == 1 \
+                    or any([node.infix() == "0" or node.infix() == "0.0" for node in predicted_tree[i].nodes]):
                     results[metric].append(np.nan)
                 else:
                     dim = len(predicted_tree[i].nodes)
@@ -414,7 +419,7 @@ def compute_metrics(predicted, true, predicted_tree=None, tree=None, metrics="r2
                     mesh = np.meshgrid(*grids)
                     grid_shape = [n_points] * len(limits)
                     flatten_grid = np.array([g.flatten() for g in mesh]).T
-
+                    
                     org_np_fn = tree_to_numexpr_fn(tree[i])
                     org_vector_field = compute_vector_field(org_np_fn, flatten_grid, grid_shape)
                     org_div = compute_divergence(org_vector_field, spacing)
