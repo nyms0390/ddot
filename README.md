@@ -1,61 +1,33 @@
-[![PyPI](https://img.shields.io/pypi/v/odeformer.svg)](
-https://pypi.org/project/odeformer/)
-[![Colab](https://img.shields.io/badge/colab-notebook-yellow)](https://colab.research.google.com/github/sdascoli/odeformer/blob/main/ODEFormer_demo.ipynb)
-
-
-# ODEformer: symbolic regression of dynamical systems with transformers
-
-This repository contains code for the paper [ODEformer: symbolic regression of dynamical systems with transformers](https://arxiv.org/pdf/2310.05573.pdf).
-
 ## Installation
-This package is installable via pip:
 
-```pip install odeformer```
+To install the required dependencies, you can use the following commands:
 
-## Demo
+conda env create -f environment.yml
+conda activate your_env_name
 
-We include a small notebook that loads a pre-trained model you can play with:
-[![Colab](https://img.shields.io/badge/colab-notebook-yellow)](https://colab.research.google.com/github/sdascoli/odeformer/blob/main/ODEFormer_demo.ipynb)
+## Data Generation
 
-## Usage
+Generate the data for pretraining:
 
-Import the model in a few lines of code:
-```python
-import odeformer
-from odeformer.model import SymbolicTransformerRegressor
-dstr = SymbolicTransformerRegressor(from_pretrained=True)
-model_args = {'beam_size':50, 'beam_temperature':0.1}
-dstr.set_model_args(model_args)
-```
+python generate_data.py
 
-Basic usage:
-```python
-import numpy as np
-from odeformer.metrics import r2_score
+## Training
 
-times = np.linspace(0, 10, 50)
-x = 2.3*np.cos(times+.5)
-y = 1.2*np.sin(times+.1)
-trajectory = np.stack([x, y], axis=1)
+Edit the parameters in run.py as your need and run:
 
-candidates = dstr.fit(times, trajectory)
-dstr.print(n_predictions=1)
-pred_trajectory = dstr.predict(times, trajectory[0])
-print(r2_score(trajectory, pred_trajectory))
-```
+python run.py
 
+## Evaluation
 
-## Training and evaluation
+Evaluate DDOT & ODEFormer with the command, parameter "use_ft_decoder" should be set accordingly:
 
-To launch a model training with additional arguments (arg1,val1), (arg2,val2):
-```python train.py --arg1 val1 --arg2 val2```
+bash run_evaluation.sh
 
-All hyper-parameters related to training are specified in ```parsers.py```, and those related to the environment are in ```envs/environment.py```.
+Evaluate other baselinse with command:
 
-To launch evaluation, please use the flag ```reload_checkpoint``` to specify in which folder the saved model is located:
-```python evaluate.py --reload_checkpoint XXX```
+bash run_baselines.sh
 
+Gather the result table with command:
 
-## License
+python gather_result.py
 
-This repository is licensed under MIT licence.
