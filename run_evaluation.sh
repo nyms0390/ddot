@@ -9,10 +9,10 @@ MODELS=(
 )
     #
 
-datasets=("odebench") # "oscillators""strogatz" 
+datasets=("oscillators") # "strogatz" "odebench"
 eval_noise_gamma=("0" "0.01" "0.02" "0.03" "0.04" "0.05") #  
 beam_size=("50")
-eval_task=("y0_generalization") #"interpolation" 
+eval_task=("y0_generalization" "interpolation") #  
 # hyper_opt="True"
 # eval_noise_type="additive"
 # baseline_hyper_opt_eval_fraction="0.3"

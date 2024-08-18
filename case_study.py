@@ -32,6 +32,8 @@ for _, idx in best_records:
     print(f"=====Record {idx}=====")
     r2, acc, snmse = all_results[idx][0]['r2_zero'], all_results[idx][0]['accuracy_l1_biggio'], all_results[idx][0]['snmse']
     print(f'r2_zero: {r2}, acc: {acc}, snmse: {snmse}')
+    pred_tree = all_results[idx][1]
+    print(f'pred tree: {pred_tree}')
 
 with open('anes_results.pkl', 'wb') as f:
     pickle.dump(all_results, f)

@@ -14,19 +14,20 @@ MODELS=(
     # "ffx"
     # "pysr"
     # "pysr_poly"
-    # "sindy"
+    "sindy"
     # "sindy_all"
     # "sindy_full"
     # "sindy_save"
     # "sindy_poly3"
     # "sindy_poly6"
     # "sindy_poly10"
-    "odeformer"
+    # "odeformer"
 )
 
-dataset="odebench"
+datasets=("odebench") # "strogatz"
 eval_noise_gamma=("0" "0.01" "0.02" "0.03" "0.04" "0.05") # 
-beam_size=("1")
+beam_size=("10")
+eval_task=("interpolation" "y0_generalization") #
 # hyper_opt="True"
 # eval_noise_type="additive"
 # baseline_hyper_opt_eval_fraction="0.3"
@@ -36,20 +37,29 @@ beam_size=("1")
 # do
 for model in "${MODELS[@]}";
 do
-    for noise in "${eval_noise_gamma[@]}"; 
+    for dataset in "${datasets[@]}";
     do
-        for bs in "${beam_size[@]}";
+        for task in "${eval_task[@]}";
         do
-            echo "Evaluting ${model} with eval_noise_gamma=${eval_noise_gamma}"
-            python run_baselines.py \
-                --baseline_model="${model}" \
-                --eval_noise_gamma="${noise}" \
-                --dataset="${dataset}" \
-                --beam_type="sampling" \
-                --beam_size="${bs}" \
-                --beam_temperature=0.1 \
-                --eval_size=10000
-                # --eval_subsample_ratio=0.5 \
+            for noise in "${eval_noise_gamma[@]}"; 
+            do
+                for bs in "${beam_size[@]}";
+                do
+                    echo "Evaluting ${model} with eval_noise_gamma=${eval_noise_gamma}"
+                    python run_baselines.py \
+                        --baseline_model="${model}" \
+                        --eval_noise_gamma="${noise}" \
+                        --dataset="${dataset}" \
+                        --beam_type="sampling" \
+                        --beam_size="${bs}" \
+                        --beam_temperature=0.1 \
+                        --eval_size=1000 \
+                        --eval_subsample_ratio=0.5 \
+                        --e_task="${task}" \
+                        --convert_prediction_to_tree=True \
+                        --validation_metrics="r2_zero,accuracy_l1_biggio,snmse,divergence"
+                done
+            done
         done
     done
 done

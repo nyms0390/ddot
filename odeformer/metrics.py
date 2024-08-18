@@ -408,7 +408,8 @@ def compute_metrics(predicted, true, predicted_tree=None, tree=None, metrics="r2
                     or isinstance(predicted_tree[i], str) \
                     or len(predicted_tree[i].nodes) != len(tree[i].nodes) \
                     or len(tree[i].nodes) == 1 \
-                    or any([node.infix() == "0" or node.infix() == "0.0" for node in predicted_tree[i].nodes]):
+                    or any([node.infix() == "0" or node.infix() == "0.0" for node in predicted_tree[i].nodes]) \
+                    or any([node.infix() == "0" or node.infix() == "0.0" for node in tree[i].nodes]):
                     results[metric].append(np.nan)
                 else:
                     dim = len(predicted_tree[i].nodes)

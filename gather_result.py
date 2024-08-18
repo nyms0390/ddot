@@ -6,14 +6,15 @@ from prettytable import PrettyTable
 # %%
 def evaluate(filepath):
     df = pd.read_csv(filepath)
-    df['r2_tol'] = df['r2_zero']>.9
+    df['r2_tol'] = df['test_r2_zero']>.9
     # df['test_r2_tol'] = df['test_r2_zero']>.8
 
-    r2 = df['r2_zero'].mean()
-    acc = df['accuracy_l1_biggio'].mean()
+    r2 = df['test_r2_zero'].mean()
+    print(r2)
+    acc = df['test_accuracy_l1_biggio'].mean()
     acc_r2_09 = df['r2_tol'].sum() / df['r2_tol'].count()
     time = df['duration_fit'].mean()
-    div = df['divergence'].mean()
+    div = df['test_divergence'].mean()
 
     return {"R2": r2, "P(R2>.9)": acc_r2_09, "Inference time": time, "Divergence": div}
 
@@ -39,8 +40,8 @@ def create_table(files, title):
 
 # %%
 root = "/home/310553058/odeformer/experiments"
-baselines = ["ddot", "odeformer"] # 
-datasets = ["odebench"] #, "strogatz"
+baselines = ["odeformer", "ddot"] # , "sindy"
+datasets = ["odebench"] #, "strogatz" "domain"
 noise_gamma = ["0.0", "0.01", "0.02", "0.03", "0.04", "0.05"]
 beam_size = ["50"] # "1", "10", "20", "100"
 eval_task = "y0_generalization" #"interpolation"
@@ -54,8 +55,13 @@ eval_task = "y0_generalization" #"interpolation"
 
 for baseline in baselines:
     for dataset in datasets:
-        suffix = "pmlb" if dataset == "strogatz" else "strogatz_extended"
-        files = [Path(root) / baseline / dataset / f"eval_gamma_noise_{noise}" / f"evaluation_task_{eval_task}" / "new_evals" / f"eval_{suffix}.csv" for noise in noise_gamma]
+        if dataset == "strogatz":
+            suffix = "pmlb"
+        elif dataset == "odebench":
+            suffix = "strogatz_extended"
+        elif dataset == "domain":
+            suffix = "in_domain"
+        files = [Path(root) / baseline / dataset / f"eval_gamma_noise_{noise}" / f"evaluation_task_{eval_task}" / "new_evals" / f"eval_{suffix}.csv" for noise in noise_gamma] # 
         title = f"{dataset} / {baseline}"
         table = create_table(files, title)
         print(table)

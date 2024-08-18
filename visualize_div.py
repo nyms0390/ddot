@@ -27,11 +27,12 @@ batch_results = defaultdict(list)
 
 # %%
 parser = get_parser()
-parser.add_argument(
-    "--fp16", type=bool, default=False, help="Run model with float16"
-)
+# parser.add_argument(
+#     "--fp16", type=bool, default=False, help="Run model with float16"
+# )
 params = parser.parse_args(args=[
-    '--reload_data', "/home/nyms/odeformer/experiments/datagen_final/datagen_use_sympy_True",
+    '--reload_data', "/home/310553058/odeformer/experiments/datagen_ftraj/datagen_use_sympy_True",
+    '--reload_model', "/home/310553058/odeformer/experiments/paper/exp_use_ft_decoder_True/checkpoint.pth",
     '--use_wandb', 'False',
     '--collate_queue_size', '1000',
     #'n_steps_per_epoch':1000,
@@ -42,17 +43,19 @@ params = parser.parse_args(args=[
     '--min_dimension', '1',
     '--max_dimension', '6',
     '--float_descriptor_length', '3',
-    '--enc_emb_dim', '256',
-    '--dec_emb_dim', '256',
+    '--enc_emb_dim', '512',
+    '--dec_emb_dim', '512',
     #'subsample_ratio':0.5,
     '--max_points', '200',
     '--train_noise_gamma', '.01',
     '--train_subsample_ratio', '.5',
-    '--debug',
+    # '--debug',
     '--eval_only', 'True',
-    '--eval_dump_path', '/home/nyms/odeformer/eval',
-    '--from_pretrained', 'True',
+    # '--from_pretrained', 'True',
+    '--eval_dump_path', '/home/310553058/odeformer/experiments',
     '--beam_size', '50',
+    '--use_ft_decoder', 'True',
+    '--validation_metrics', 'r2_zero,divergence',
 ])
 env = build_env(params)
 
@@ -113,7 +116,7 @@ def plot_divergence(ax, title, mesh, divergence_field, dims=(0, 1)):
     div = divergence_field[tuple(slices)]
     
     ax.imshow(div, extent=(X.min(), X.max(), Y.min(), Y.max()), origin='lower', cmap='RdBu')
-    ax.set_title(title)
+    ax.set_title(title, size=20)
 
 # %%
 def corrupt_training_data(times, trajectories):
@@ -170,8 +173,8 @@ def fit(samples):
 
 # %%
 def main():
-    fig_vec, axes_vec = plt.subplots(2, 7, figsize=(15, 5), sharex=True, sharey=True)
-    fig_div, axes_div = plt.subplots(2, 7, figsize=(15, 5), sharex=True, sharey=True)
+    # fig_vec, axes_vec = plt.subplots(2, 7, figsize=(15, 5), sharex=True, sharey=True)
+    fig_div, axes_div = plt.subplots(1, 5, figsize=(15, 5), sharex=True, sharey=True)
     # fig_grad, axes_grad = plt.subplots(6, 7, figsize=(15, 15), sharex=True, sharey=True)
     count = 0
 
@@ -195,24 +198,26 @@ def main():
         org_div = compute_divergence(org_vector_field, spacing)
 
         #
-        _, _, pred_tree = fit(sample)
+        results, _, pred_tree = fit(sample)
         
         pred_np_fn = tree_to_numexpr_fn(pred_tree)
         pred_vector_field = compute_vector_field(pred_np_fn, flat_coord, grid_shape)
         pred_div = compute_divergence(pred_vector_field, spacing)
+        div = results['divergence'][0]
 
         # Plot the vector field for the first two dimensions
-        if dim > 1 and idx % 4 == 0:
-            print(f'idx: {idx}')
-            plot_vector_field(axes_vec[count//7][count%7], f"ODE: {idx//4+1}", mesh, org_vector_field, dims=(0, 1))
-            plot_vector_field(axes_vec[count//7+1][count%7], f"ODE: {idx//4+1}", mesh, pred_vector_field, dims=(0, 1))
+        if dim > 1 and idx % 4 == 0 and idx / 4 > 1:
+            print(f'idx: {idx}, div: {div:.2f}')
+            # plot_vector_field(axes_vec[count//7][count%7], f"ODE: {idx//4+1}", mesh, org_vector_field, dims=(0, 1))
+            # plot_vector_field(axes_vec[count//7+1][count%7], f"ODE: {idx//4+1}", mesh, pred_vector_field, dims=(0, 1))
             
-            plot_divergence(axes_div[count//7][count%7], f"ODE: {idx//4+1}", mesh, org_div, dims=(0, 1))
-            plot_divergence(axes_div[count//7+1][count%7], f"ODE: {idx//4+1}", mesh, pred_div, dims=(0, 1))
+            plot_divergence(axes_div[count], f"DIV-diff: {div:.2f}", mesh, pred_div, dims=(0, 1))
+            # plot_divergence(axes_div[count//7+1][count%7], f"ODE: {idx//4+1}", mesh, pred_div, dims=(0, 1))
 
             count += 1
     # plt.tight_layout()
     plt.show()
+    plt.savefig('vis_div_ddot.png', bbox_inches='tight')
 
 # %%
 if __name__ == "__main__":

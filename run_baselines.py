@@ -249,7 +249,6 @@ if __name__ == "__main__":
         params.eval_on_oscillators = False
         params.eval_on_file = params.dataset
         dataset_name = Path(params.dataset).stem
-    params.validation_metrics = 'r2,r2_zero,snmse,accuracy_l1_1e-1,accuracy_l1_1e-3,accuracy_l1_biggio,is_valid,complexity_sympy,relative_complexity_sympy,complexity_string,relative_complexity_string' # complexity,term_difference,term_difference_sympy
     params.eval_only = True
     # params.cpu = True
     params.max_dimension = 5
