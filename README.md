@@ -2,8 +2,10 @@
 
 To install the required dependencies, you can use the following commands:
 
+```
 conda env create -f environment.yml
 conda activate your_env_name
+```
 
 ## Data Generation
 
