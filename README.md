@@ -9,25 +9,25 @@ conda activate your_env_name
 
 Generate the data for pretraining:
 
-'''python generate_data.py'''
+```python generate_data.py```
 
 ## Training
 
 Edit the parameters in run.py as your need and run:
 
-'''python run.py'''
+```python run.py```
 
 ## Evaluation
 
 Evaluate DDOT & ODEFormer with the command, parameter "use_ft_decoder" should be set accordingly:
 
-'''bash run_evaluation.sh'''
+```bash run_evaluation.sh```
 
 Evaluate other baselinse with command:
 
-'''bash run_baselines.sh'''
+```bash run_baselines.sh```
 
 Gather the result table with command:
 
-'''python gather_result.py'''
+```python gather_result.py```
 
