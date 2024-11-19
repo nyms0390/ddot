@@ -18,12 +18,12 @@ def ode2(state, t):
 # %%
 t = np.linspace(0, 10, 200)
 
-initial_state = [1, 0]
-traj1 = odeint(ode1, initial_state, t)
-traj2 = odeint(ode2, initial_state, t)
+init_point = [1, 0]
+traj1 = odeint(ode1, init_point, t)
+traj2 = odeint(ode2, init_point, t)
 
-x = np.linspace(-2, 2, 20)
-y = np.linspace(-2, 2, 20)
+x = np.linspace(-4, 4, 20)
+y = np.linspace(-4, 4, 20)
 X, Y = np.meshgrid(x, y)
 
 u1 = -Y
@@ -36,7 +36,7 @@ fig, axes = plt.subplots(1, 3, figsize=(25, 8), sharex=True, sharey=True)
 axes[0].quiver(X, Y, u1, v1, color='gray', alpha=0.5)
 axes[0].plot(traj1[:, 0], traj1[:, 1], 'r-', label='Trajectory of ground truth ODE')
 axes[0].plot(traj2[:, 0], traj2[:, 1], 'b--', label='Trajectory of predicted ODE')
-axes[0].plot(1, 0, 'go', label='Original Initial Point (1, 0)')
+axes[0].plot(init_point[0], init_point[1], 'go', label=f'Original Initial Point ({init_point[0]}, {init_point[1]})')
 axes[0].set_xlabel('x')
 axes[0].set_ylabel('y')
 axes[0].set_title('Reconstruction')
@@ -45,14 +45,14 @@ axes[0].grid()
 
 
 # Generalization
-initial_state = [0, 1]
-traj1 = odeint(ode1, initial_state, t)
-traj2 = odeint(ode2, initial_state, t)
+init_point = [2, 0]
+traj1 = odeint(ode1, init_point, t)
+traj2 = odeint(ode2, init_point, t)
 
 axes[1].quiver(X, Y, u1, v1, color='gray', alpha=0.5)
 axes[1].plot(traj1[:, 0], traj1[:, 1], 'r-', label='Trajectory of Ground Truth ODE')
 axes[1].plot(traj2[:, 0], traj2[:, 1], 'b--', label='Trajectory of Predicted ODE')
-axes[1].plot(0, 1, 'go', label='New Initial Point (0, 1)')
+axes[1].plot(init_point[0], init_point[1], 'go', label=f'New Initial Point ({init_point[0]}, {init_point[1]})')
 axes[1].set_xlabel('x')
 axes[1].set_ylabel('y')
 axes[1].set_title('Generalization')
@@ -72,6 +72,22 @@ axes[2].set_title('Divergence')
 axes[2].legend(loc='upper left')
 axes[2].grid()
 
+plt.tight_layout()
+plt.savefig('intro_exp.png', format='png', transparent=True)
 plt.show()
-plt.savefig('intro_exp.png')
+
+# %%
+plt.quiver(X, Y, u1, v1, color='gray', alpha=0.5)
+
+# dx = np.diff(traj2
+# [0], init_point[1], 'go', label=f'Initial Point ({init_point[0]}, {init_point[1]})')
+plt.xlabel('x')
+plt.ylabel('y')
+# plt.title('Reconstruction')
+# plt.legend(loc='upper left')
+plt.grid()
+
+plt.tight_layout()
+plt.savefig('data_gen_01.png', format='png', transparent=True)
+plt.show()
 # %%

@@ -3,3 +3,8 @@ __pycache__/
 .ipynb
 /experiments/*
 *.pkl
+*.pth
+*.pt
+*.json
+*.csv
+*.log
