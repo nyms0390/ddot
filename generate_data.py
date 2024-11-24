@@ -8,32 +8,32 @@ from pathlib import Path
 import shutil
 from distutils import dir_util
 
-exp_folder = 'datagen_ftraj'
+exp_folder = 'datagen_lorenz'
 
-dump_path = f'/home/310553058/odeformer/experiments'
+dump_path = f'/home/nyms/odeformer/experiments'
 Path(dump_path).mkdir(exist_ok=True)
 
 extra_args = {
     'n_steps_per_epoch':1000,
     'max_epoch':100,
     'ode_integrator':'solve_ivp',
-    'num_workers':60,
+    'num_workers':1,
     'use_queue':False,
     'batch_size':10,
-    'min_dimension':1,
-    'max_dimension':6,
     'print_freq':100,
     'max_points':200,
     "export_data":True,
     "use_wandb":False,
     "cpu":True,
-    "train_noise_gamma":0,
+    "train_noise_gamma":0.05,
     "train_subsample_ratio":0, 
     #"operators_to_use":"add:3,mul:1,inv:1,sin:1,id:3"
-     }
+    "use_sympy":True,
+    "max_dimension":6,
+}
 
 grid = {
-    'use_sympy':[True],
+    
 }
 
 # Path to your PyTorch script

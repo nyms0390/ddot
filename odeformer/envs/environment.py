@@ -425,17 +425,28 @@ class FunctionEnvironment(object):
         dimension=None,
         n_points=None,
     ):
-        (
-            tree,
-            dimension,
-            nb_unary_ops,
-            nb_binary_ops,
-        ) = self.generator.generate_multi_dimensional_tree(
-            rng=self.rng,
-            nb_unary_ops=nb_unary_ops,
-            nb_binary_ops=nb_binary_ops,
-            dimension=dimension,
-        )
+        if self.params.ode_equation == "":
+            (
+                tree,
+                dimension,
+                nb_unary_ops,
+                nb_binary_ops,
+            ) = self.generator.generate_multi_dimensional_tree(
+                rng=self.rng,
+                nb_unary_ops=nb_unary_ops,
+                nb_binary_ops=nb_binary_ops,
+                dimension=dimension,
+            )
+        else:
+            (
+                tree,
+                dimension,
+                nb_unary_ops,
+                nb_binary_ops,
+            ) = self.generator.string_to_tree(
+                self.params.ode_equation,
+                self.simplifier
+            )
 
         if tree is None:
             return {"tree": tree}, ["bad tree"]

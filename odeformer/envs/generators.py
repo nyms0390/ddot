@@ -11,6 +11,8 @@ from typing import Union
 # from turtle import degrees
 import numpy as np
 import scipy.special
+from sympy.parsing.sympy_parser import parse_expr
+from sympy import Basic
 import copy
 from logging import getLogger
 from collections import defaultdict
@@ -624,6 +626,39 @@ class RandomFunctions(Generator):
             nb_unary_ops_to_use,
             nb_binary_ops_to_use,
         )
+
+    def string_to_tree(self, s, simplifier):
+        def traverse(node):
+            if not isinstance(node, Basic):
+                return 0, 0
+            
+            unary_count = 0
+            binary_count = 0
+            stack = [node]
+
+            while stack:
+                node = stack.pop()
+                args = node.args
+                if len(args) == 1:
+                    unary_count += 1
+                elif len(args) == 2:
+                    binary_count += 1
+                stack.extend(args)
+            return unary_count, binary_count
+
+        eqs = s.split('|')
+        exprs = [parse_expr(eq) for eq in eqs]
+
+        nb_unary_ops = []
+        nb_binary_ops = []
+        for expr in exprs:
+            u, b = traverse(expr)
+            nb_unary_ops.append(u)
+            nb_binary_ops.append(b)
+        
+        prefix = [self.equation_encoder.decode(simplifier.sympy_to_prefix(exp)) for exp in exprs]
+        tree = NodeList(prefix)
+        return tree, tree.get_dimension(), nb_unary_ops, nb_binary_ops
 
     def add_unaries(self, rng, tree, nb_unaries):
         prefix = self._add_unaries(rng, tree)
