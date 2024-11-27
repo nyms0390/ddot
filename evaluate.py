@@ -231,7 +231,7 @@ class Evaluator(object):
         scores = OrderedDict({"epoch": self.trainer.epoch})
         batch_results = defaultdict(list)
         _total = min(self.eval_size, len(iterator)) if self.eval_size > 0 else len(iterator)
-        
+        print(_total)
         for samples_i, samples in enumerate(tqdm(iterator, total=_total)):
             if samples_i == self.eval_size:
                 break
@@ -552,7 +552,7 @@ class Evaluator(object):
                 except Exception as e:
                     pass
                     pass
-                
+
         return iterator
             
     
@@ -610,9 +610,9 @@ def main(params):
 
 
 if __name__ == "__main__":
-
+    root_path = "/home/nyms/ddot/"
     parser = get_parser()
-    parser.add_argument("--dataset", type=str, choices=["strogatz", "oscillators", "odebench", "<path_to_dataset>"], 
+    parser.add_argument("--dataset", type=str, choices=["strogatz", "oscillators", "odebench", "chaotic", "<path_to_dataset>"], 
         default="strogatz"
     )
     parser.add_argument("--baseline_model", type=str, default="ddot",
@@ -621,26 +621,34 @@ if __name__ == "__main__":
     params = parser.parse_args()
 
     if params.baseline_model == "ddot":
-        params.reload_checkpoint = "/home/310553058/odeformer/experiments/paper/exp_use_ft_decoder_True"
+        params.reload_model = root_path + "ddot.pth"
     elif params.baseline_model == "odeformer":
-        params.reload_checkpoint = "/home/310553058/odeformer/experiments/paper/exp_use_ft_decoder_False"
+        params.use_ft_decoder = False
+        params.reload_model = root_path + "odeformer.pth"
 
-    pk = pickle.load(open(params.reload_checkpoint + "/params.pkl", "rb"))
-    pickled_args = pk.__dict__
-    for p in params.__dict__:
-        if p in pickled_args and p not in ["eval_dump_path", "dump_path", "reload_checkpoint", "rescale", "validation_metrics", "eval_in_domain", "eval_on_pmlb", "batch_size_eval", "beam_size", "beam_selection_metric", "subsample_prob", "eval_noise_gamma", "eval_subsample_ratio", "use_wandb", "eval_size", "reload_data", "evaluation_task"]:
-            params.__dict__[p] = pickled_args[p]
+    if params.reload_checkpoint:
+        pk = pickle.load(open(params.reload_checkpoint + "/params.pkl", "rb"))
+        pickled_args = pk.__dict__
+        for p in params.__dict__:
+            if p in pickled_args and p not in ["eval_dump_path", "dump_path", "reload_checkpoint", "rescale", "validation_metrics", "eval_in_domain", "eval_on_pmlb", "batch_size_eval", "beam_size", "beam_selection_metric", "subsample_prob", "eval_noise_gamma", "eval_subsample_ratio", "use_wandb", "eval_size", "reload_data", "evaluation_task"]:
+                params.__dict__[p] = pickled_args[p]
 
     if params.dataset == "strogatz":
         params.eval_in_domain = False
         params.eval_on_file = False
         params.eval_on_oscillators = False
         params.eval_on_pmlb = True
-        params.path_dataset = "/home/310553058/odeformer/datasets/strogatz.pkl"
+        params.path_dataset = root_path + "datasets/strogatz.pkl"
         dataset_name = params.dataset
     elif params.dataset == "odebench":
         params.eval_in_domain = False
-        params.eval_on_file = "/home/310553058/odeformer/datasets/strogatz_extended.json"
+        params.eval_on_file = root_path + "datasets/strogatz_extended.json"
+        params.eval_on_oscillators = False
+        params.eval_on_pmlb = False
+        dataset_name = params.dataset
+    elif params.dataset == "chaotic":
+        params.eval_in_domain = False
+        params.eval_on_file = root_path + "datasets/chaotic.json"
         params.eval_on_oscillators = False
         params.eval_on_pmlb = False
         dataset_name = params.dataset

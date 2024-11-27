@@ -9,15 +9,14 @@ import shutil
 from distutils import dir_util
 #user = os.getlogin()
 
-exp_folder = 'paper'
+exp_folder = 'lorenz_test'
 
-#dump_path = f'/home/{user}/odeformer/experiments'
-dump_path = f'/home/310553058/odeformer/experiments'
+dump_path = f'/home/ddot/experiments'
 Path(dump_path).mkdir(exist_ok=True)
 
 extra_args = {
-    'reload_data':dump_path + "/datagen_ftraj/datagen_use_sympy_True",
-    'reload_checkpoint':dump_path + "/paper/exp_use_ft_decoder_True",
+    'reload_data':dump_path + "/datagen_lorenz/datagen_",
+    # 'reload_checkpoint':dump_path + "/paper/exp_use_ft_decoder_True",
     'beam_size':10,
     'eval_size':10000,
     'batch_size_eval':16,
@@ -26,10 +25,7 @@ extra_args = {
     }
 
 grid = {
-    "eval_noise_gamma":[0.0],
     "eval_subsample_ratio":[0.5],
-    #"beam_temperature":[0.1,0.3],
-    "beam_size":[1],
 }
 
 def get_free_gpus():

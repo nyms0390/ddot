@@ -404,4 +404,10 @@ def get_parser():
         default=True,
         help="Whether to use ft_decoder",
     )
+    parser.add_argument(
+        "--ode_equation", 
+        type=str, 
+        default="10 * (x_1 - x_0) | x_0 * (28 - x_2) - x_1 | x_0 * x_1 - 8/3 * x_2", 
+        help="Path of data to eval",
+    )
     return parser

@@ -1,3 +1,4 @@
+# %%
 import os
 import re
 import json
@@ -9,9 +10,9 @@ from tqdm import tqdm
 import matplotlib
 import matplotlib.pyplot as plt
 
-from .strogatz_equations import equations
+from strogatz_equations import equations
 
-
+# %%
 config = {
     "t_span": (0, 10),  # time span for integration
     "method": "LSODA",  # method for integration
@@ -313,7 +314,7 @@ def plot_prediction(dstr, equation, noise=0, subsampling=0, seed=0, save=False):
 
     return trajectory, pred_trajectory
 
-
+# %%
 if __name__ == '__main__':
     process_equations(equations)
     solve_equations(equations, config)

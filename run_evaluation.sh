@@ -8,10 +8,10 @@ MODELS=(
     "odeformer" "ddot"
 )
 
-datasets=("oscillators" "strogatz" "odebench") # 
+datasets=("chaotic") # "strogatz" "odebench"
 eval_noise_gamma=("0" "0.01" "0.02" "0.03" "0.04" "0.05") #  
 beam_size=("50")
-eval_task=("y0_generalization" "interpolation") #  
+eval_task=("interpolation" "y0_generalization" ) #  
 
 for model in "${MODELS[@]}";
 do

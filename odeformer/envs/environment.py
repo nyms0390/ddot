@@ -471,7 +471,6 @@ class FunctionEnvironment(object):
             if tree is None or len_after > 2 * len_before:
                 return {"tree": tree}, ["simplification error"]
 
-
         if n_points is None:
             n_points = self.rng.randint(min(self.params.min_points, self.params.max_points), self.params.max_points + 1)
 
@@ -736,7 +735,7 @@ class FunctionEnvironment(object):
         )
 
         parser.add_argument("--min_dimension", type=int, default=1)
-        parser.add_argument("--max_dimension", type=int, default=2)
+        parser.add_argument("--max_dimension", type=int, default=6)
         parser.add_argument("--max_masked_variables", type=int, default=0)
         parser.add_argument(
             "--enforce_dim",

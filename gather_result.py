@@ -10,7 +10,7 @@ def evaluate(filepath):
     # df['test_r2_tol'] = df['test_r2_zero']>.8
 
     r2 = df['test_r2_zero'].mean()
-    print(r2)
+    # print(r2)
     acc = df['test_accuracy_l1_biggio'].mean()
     acc_r2_09 = df['r2_tol'].sum() / df['r2_tol'].count()
     time = df['duration_fit'].mean()
@@ -39,9 +39,9 @@ def create_table(files, title):
     return table
 
 # %%
-root = "/home/310553058/odeformer/experiments"
+root = "/home/nyms/ddot/experiments"
 baselines = ["odeformer", "ddot"] # , "sindy"
-datasets = ["odebench"] #, "strogatz" "domain"
+datasets = ["chaotic"] #, "strogatz" "domain" "odebench"
 noise_gamma = ["0.0", "0.01", "0.02", "0.03", "0.04", "0.05"]
 beam_size = ["50"] # "1", "10", "20", "100"
 eval_task = "y0_generalization" #"interpolation"
@@ -61,7 +61,10 @@ for baseline in baselines:
             suffix = "strogatz_extended"
         elif dataset == "domain":
             suffix = "in_domain"
+        elif dataset == "chaotic":
+            suffix = "chaotic"
         files = [Path(root) / baseline / dataset / f"eval_gamma_noise_{noise}" / f"evaluation_task_{eval_task}" / "new_evals" / f"eval_{suffix}.csv" for noise in noise_gamma] # 
         title = f"{dataset} / {baseline}"
         table = create_table(files, title)
         print(table)
+# %%
