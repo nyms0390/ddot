@@ -1,7 +1,7 @@
 # %%
 import random
 
-def generate_samples(num_states, x_range, y_range, z_range):
+def generate_random_samples(num_states, x_range, y_range, z_range):
     states = [
         [
             random.uniform(*x_range), 
@@ -11,6 +11,27 @@ def generate_samples(num_states, x_range, y_range, z_range):
         for _ in range(num_states)
     ]
     return states
+
+def generate_perturbed_sample(n_sample, vec, perturb_range):
+    """
+    Generate perturbations around a given vector.
+
+    Parameters:
+        n_sample (int): Number of perturbations to generate.
+        vec (list[float]): The vector around which perturbations will be generated.
+        range (tuple[float, float]): The range of perturbation values, e.g., (-0.5, 0.5).
+
+    Returns:
+        list[list[float]]: List of perturbed vectors.
+    """
+    perturbed_samples = [
+        [
+            target_val + random.uniform(*perturb_range)
+            for target_val in vec
+        ]
+        for _ in range(n_sample)
+    ]
+    return perturbed_samples
 
 lorenz_format = {
     'id': 1,
@@ -30,7 +51,7 @@ equations = []
 
 n_sample = 50
 init_state = [[2.3, 8.1, 12.4], [10., 20., 30.]]
-consts = generate_samples(n_sample, (5.0, 15.0), (10.0, 50.0), (1.5, 5.0))
+consts = generate_random_samples(n_sample, (5.0, 15.0), (10.0, 50.0), (1.5, 5.0))
 for i in range(50):
     sample = lorenz_format.copy()
     sample['id'] = i + 1
@@ -39,14 +60,42 @@ for i in range(50):
     equations.append(sample)
 
 n_sample = 50
-consts = generate_samples(n_sample, (5.0, 15.0), (10.0, 50.0), (1.5, 5.0))
+consts = generate_random_samples(n_sample, (5.0, 15.0), (10.0, 50.0), (1.5, 5.0))
 for i in range(50):
-    init_state = generate_samples(2, (0, 50), (0, 50), (0, 100))
+    init_state = generate_random_samples(2, (0, 50), (0, 50), (0, 100))
     sample = lorenz_format.copy()
     sample['id'] = n_sample + i + 1
     sample['consts'] = [consts[i]]
     sample['init'] = init_state
     equations.append(sample)
+
+# %%
+equations = []
+
+n_sample = 25
+perturb_range = (-.1, .1)
+
+base_init_states = [[2.3, 8.1, 12.4], [10.0, 20.0, 30.0]]
+base_params = [[10.0, 28.0, 2.6666666666666665], [5.1, 12.0, 1.67]]
+
+id_counter = 1
+for init_state in base_init_states:
+    for params in base_params:
+        # Generate perturbed samples for the current pairing
+        perturbed_states = generate_perturbed_sample(n_sample, init_state, perturb_range)
+        perturbed_params = generate_perturbed_sample(n_sample, params, perturb_range)
+        
+        # Create samples and append them to the equations list
+        for i in range(n_sample):
+            sample = lorenz_format.copy()
+            sample['id'] = id_counter
+            sample['consts'] = [perturbed_params[i]]
+            sample['init'] = [perturbed_states[i]]
+            equations.append(sample)
+            id_counter += 1
+
+
+
 
 # {
 #     'id': 4,

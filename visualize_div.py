@@ -27,12 +27,12 @@ batch_results = defaultdict(list)
 
 # %%
 parser = get_parser()
-# parser.add_argument(
-#     "--fp16", type=bool, default=False, help="Run model with float16"
-# )
+parser.add_argument(
+    "--fp16", type=bool, default=False, help="Run model with float16"
+)
 params = parser.parse_args(args=[
-    '--reload_data', "/home/310553058/odeformer/experiments/datagen_ftraj/datagen_use_sympy_True",
-    '--reload_model', "/home/310553058/odeformer/experiments/paper/exp_use_ft_decoder_True/checkpoint.pth",
+    # '--reload_data', "/home/310553058/odeformer/experiments/datagen_ftraj/datagen_use_sympy_True",
+    '--reload_model', "/home/nyms/ddot/ddot.pth",
     '--use_wandb', 'False',
     '--collate_queue_size', '1000',
     #'n_steps_per_epoch':1000,
@@ -52,10 +52,10 @@ params = parser.parse_args(args=[
     # '--debug',
     '--eval_only', 'True',
     # '--from_pretrained', 'True',
-    '--eval_dump_path', '/home/310553058/odeformer/experiments',
+    '--eval_dump_path', '/home/nyms/ddot/experiments',
     '--beam_size', '50',
     '--use_ft_decoder', 'True',
-    '--validation_metrics', 'r2_zero,divergence',
+    '--validation_metrics', 'r2_zero,divergence,accuracy_l1_biggio,snmse',
 ])
 env = build_env(params)
 

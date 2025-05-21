@@ -22,7 +22,7 @@ extra_args = {
     'batch_size_eval':16,
     'min_points':10,
     #'eval_only':True,
-    }
+}
 
 grid = {
     "eval_subsample_ratio":[0.5],
