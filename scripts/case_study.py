@@ -2,15 +2,15 @@
 import matplotlib.pyplot as plt
 import pickle
 import heapq
-from visualize_div import fit
 
 # %%
 from odeformer.envs import build_env
 from odeformer.slurm import init_signal_handler, init_distributed_mode
 from odeformer.model.__init__ import build_modules
 from odeformer.trainer import Trainer
-from evaluate import setup_odeformer, Evaluator
-from parsers import get_parser
+from .evaluate import setup_odeformer, Evaluator
+from .parsers import get_parser
+from .visualize_div import fit
 
 parser = get_parser()
 parser.add_argument(

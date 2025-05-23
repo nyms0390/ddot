@@ -14,13 +14,13 @@ from typing import List
 from collections import OrderedDict, defaultdict
 
 from odeformer.envs import build_env
-from parsers import get_parser
 from odeformer.slurm import init_signal_handler, init_distributed_mode
 from odeformer.model.__init__ import build_modules
 from odeformer.trainer import Trainer
 from odeformer.envs.environment import EnvDataset
 from odeformer.envs.generators import integrate_ode
-from evaluate import setup_odeformer, Evaluator
+from .parsers import get_parser
+from .evaluate import setup_odeformer, Evaluator
 
 
 batch_results = defaultdict(list)

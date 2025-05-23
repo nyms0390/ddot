@@ -14,6 +14,7 @@ import os
 import pickle
 from pathlib import Path
 import wandb
+import setproctitle
 
 import odeformer
 from odeformer.slurm import init_signal_handler, init_distributed_mode
@@ -21,9 +22,8 @@ from odeformer.utils import bool_flag, initialize_exp
 from odeformer.model import check_model_params, build_modules
 from odeformer.envs import build_env
 from odeformer.trainer import Trainer
-from evaluate import Evaluator, setup_odeformer
-from parsers import get_parser
-import setproctitle
+from .evaluate import Evaluator, setup_odeformer
+from .parsers import get_parser
 
 np.seterr(all="raise")
 

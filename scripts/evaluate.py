@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 
 import odeformer
-from parsers import get_parser
+from .parsers import get_parser
 from odeformer.slurm import init_signal_handler, init_distributed_mode
 from odeformer.utils import initialize_exp
 from odeformer.model import build_modules
