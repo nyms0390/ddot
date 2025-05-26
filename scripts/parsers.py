@@ -28,9 +28,9 @@ def get_parser():
     parser.add_argument("--exp_id", type=str, default="", help="Experiment ID")
 
     # float16 / AMP API
-    # parser.add_argument(
-    #     "--fp16", type=bool_flag, default=False, help="Run model with float16"
-    # )
+    parser.add_argument(
+        "--fp16", type=bool_flag, default=False, help="Run model with float16"
+    )
     parser.add_argument("--amp",type=int,default=-1,
                         help="Use AMP wrapper for float16 / distributed / gradient accumulation. Level of optimization. -1 to disable.")
 
