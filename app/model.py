@@ -30,11 +30,6 @@ path = "datasets/strogatz.pkl"  # or "datasets/strogatz_extended.json"
 # Set up inference
 evaluator, model, iterator, env, params = setup(params_args, path)
 
-
-# This is a dummy model for testing.
-def predict(feature: float) -> float:
-    """
-    A dummy prediction function that simply returns the input feature.
-    This is a placeholder for the actual model prediction logic.
-    """
-    return feature
+def predict(sample):
+    _, _, pred_tree = fit(sample, evaluator, model, env, params)
+    return pred_tree

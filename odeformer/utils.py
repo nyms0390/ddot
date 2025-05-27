@@ -16,6 +16,7 @@ import getpass
 import argparse
 import subprocess
 import io
+import concurrent.futures
 
 import errno
 import signal
@@ -141,38 +142,20 @@ def to_cuda(*args, use_cpu=False):
     return [None if x is None else x.cuda() for x in args]
 
 
-class MyTimeoutError(BaseException):
+class MyTimeoutError(Exception):
     pass
 
-def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
+def timeout(seconds=10, error_message="Function call timed out"):
     def decorator(func):
-        def _handle_timeout(repeat_id, signum, frame):
-            signal.signal(signal.SIGALRM, partial(_handle_timeout, repeat_id + 1))
-            signal.setitimer(signal.ITIMER_REAL, seconds)
-            raise MyTimeoutError(error_message)
-
+        @wraps(func)
         def wrapper(*args, **kwargs):
-            old_signal = signal.signal(signal.SIGALRM, partial(_handle_timeout, 0))
-            old_time_left = signal.getitimer(signal.ITIMER_REAL)[0]
-            assert type(old_time_left) is float and old_time_left >= 0
-            if 0 < old_time_left < seconds:  # do not exceed previous timer
-                signal.setitimer(signal.ITIMER_REAL, old_time_left)
-            else:
-                signal.setitimer(signal.ITIMER_REAL, seconds)
-            start_time = time.time()
-            try:
-                result = func(*args, **kwargs)
-            finally:
-                if old_time_left == 0:
-                    signal.setitimer(signal.ITIMER_REAL, 0)
-                else:
-                    time_elapsed = time.time() - start_time
-                    signal.signal(signal.SIGALRM, old_signal)
-                    signal.setitimer(signal.ITIMER_REAL, max(0, old_time_left - time_elapsed))
-            return result
-
-        return wraps(func)(wrapper)
-
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(func, *args, **kwargs)
+                try:
+                    return future.result(timeout=seconds)
+                except concurrent.futures.TimeoutError:
+                    raise MyTimeoutError(error_message)
+        return wrapper
     return decorator
 
 def split_data(data_path, tst_size):

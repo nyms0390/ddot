@@ -10,14 +10,14 @@ from odeformer.odebench.solve_and_plot import process_equations, solve_equations
 from scripts.inference import create_sample
 
 from . import solver, plot
-from .model import evaluator
+from .model import evaluator, predict  # Import predict
 app = FastAPI()
 
 # %%
 class ODERequest(BaseModel):
-    system_id: int
+    system_id: int= 54
     method: str = "LSODA"
-    y0: List[float]
+    y0: List[float] = [1.0, 1.0, 1.0]
     t_start: float = 0.0
     t_end: float = 10.0
     steps: int = 150
@@ -52,32 +52,12 @@ def simulate(req: ODERequest):
     sequence = sample["train"]["trajectories"][0]
     image = plot.plot_sequence(sequence)
 
+    # Get the predicted tree from the model
+    pred_tree = predict(sample)
+
     return {
         "sequence": sequence.tolist(),
-        "plot_base64": image
+        "plot_base64": image,
+        "predicted_tree": str(pred_tree)  # or pred_tree.infix() if available
     }
 
-
-@app.post("/simulate/html", response_class=HTMLResponse)
-def simulate_html(
-    system: str = Form(...),
-    y0: str = Form(...),
-    t_start: float = Form(0.0),
-    t_end: float = Form(25.0),
-    steps: int = Form(1000)
-):
-    y0_list = [float(val) for val in y0.split(",")]  # Parse y0 from comma-separated string
-    t_eval = [t_start + i * (t_end - t_start) / steps for i in range(steps)]
-    t, sequence = solver.solve_ode(system, y0_list, (t_start, t_end), t_eval)
-    image = plot.plot_sequence(sequence)
-
-    html_content = f"""
-    <html>
-        <body>
-            <h1>ODE Simulation Result</h1>
-            <p>System: {system}</p>
-            <img src="data:image/png;base64,{image}" alt="ODE Plot"/>
-        </body>
-    </html>
-    """
-    return HTMLResponse(content=html_content)

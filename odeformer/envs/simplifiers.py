@@ -4,17 +4,15 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-from abc import ABC,abstractmethod
-import traceback
+from abc import ABC
 import sympy as sp
 from sympy.parsing.sympy_parser import parse_expr
 from .generators import all_operators, math_constants, Node, NodeList
 from sympy.core.rules import Transform
-import numpy as np
 from functools import partial
-import numexpr as ne
 import torch
 from ..utils import timeout, MyTimeoutError
+import concurrent.futures
 
 class InvalidPrefixExpression(BaseException):
     pass
@@ -44,6 +42,18 @@ def timeout(time):
 def raise_timeout(signum, frame):
     raise TimeoutError
 
+def run_with_timeout(func, *args, timeout_sec=1, **kwargs):
+    """
+    Run a function with the given arguments, enforcing a timeout.
+    Returns the function result, or the first argument (e.g., expr) on timeout.
+    """
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(func, *args, **kwargs)
+        try:
+            return future.result(timeout=timeout_sec)
+        except concurrent.futures.TimeoutError:
+            # Return the first argument (usually expr) on timeout
+            return args[0] if args else None
 
 class Simplifier(ABC):
 
@@ -74,20 +84,18 @@ class Simplifier(ABC):
         if hasattr(tree, "nodes"):
             return NodeList([self.simplify_tree(node, expand, resimplify) for node in tree.nodes])
         else:
-            with timeout(1):
-                if tree is None:
-                    return tree
-                expr = self.tree_to_sympy_expr(tree)
-                if expand:
-                    expr = self.expand_expr(expr)
-                if resimplify:
-                    expr = self.simplify_expr(expr)
-                new_tree = self.sympy_expr_to_tree(expr)
-                if new_tree is None:
-                    return tree
-                else: 
-                    return new_tree.nodes[0]
-            return tree
+            if tree is None:
+                return tree
+            expr = self.tree_to_sympy_expr(tree)
+            if expand:
+                expr = self.expand_expr(expr)
+            if resimplify:
+                expr = self.simplify_expr(expr)
+            new_tree = self.sympy_expr_to_tree(expr)
+            if new_tree is None:
+                return tree
+            else: 
+                return new_tree.nodes[0]
         
     @classmethod
     def readable_tree(cls, tree):
@@ -147,24 +155,24 @@ class Simplifier(ABC):
         return f"({p})"
     
     @classmethod
-    def round_expr(cls, expr, decimals=4):
-        with timeout(1):
-            expr = expr.xreplace(
+    def round_expr(cls, expr, decimals=4, timeout_sec=1):
+        def _round():
+            return expr.xreplace(
                 Transform(
                     lambda x: x.round(decimals), lambda x: isinstance(x, sp.Float)
                 )
             )
-        return expr
-    
-    def expand_expr(self, expr):
-        with timeout(1):
-            expr = sp.expand(expr)
-        return expr
+        return run_with_timeout(_round, timeout_sec=timeout_sec)
 
-    def simplify_expr(self, expr):
-        with timeout(1):
-            expr = sp.simplify(expr)
-        return expr
+    def expand_expr(self, expr, timeout_sec=1):
+        def _expand():
+            return sp.expand(expr)
+        return run_with_timeout(_expand, timeout_sec=timeout_sec)
+
+    def simplify_expr(self, expr, timeout_sec=1):
+        def _simplify():
+            return sp.simplify(expr)
+        return run_with_timeout(_simplify, timeout_sec=timeout_sec)
 
     def tree_to_torch_module(self, tree, dtype=torch.float32):
         expr = self.tree_to_sympy_expr(tree)
