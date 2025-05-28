@@ -1,35 +1,112 @@
+# DDOT
+
+A framework for symbolic regression and ODE discovery, featuring a web-based simulation and prediction interface.
+
+---
+
 ## Installation
 
-To install the required dependencies, you can use the following commands:
+### Using Conda
 
-```
+```bash
 conda env create -f environment.yml
 conda activate your_env_name
 ```
+
+### Using Docker
+
+```bash
+docker build -t ddot-app .
+docker run -p 8000:8000 ddot-app
+```
+
+---
 
 ## Data Generation
 
 Generate the data for pretraining:
 
-```python generate_data.py```
+```bash
+python generate_data.py
+```
+
+---
 
 ## Training
 
-Edit the parameters in run.py as your need and run:
+Edit the parameters in `run.py` as needed and run:
 
-```python run.py```
+```bash
+python run.py
+```
+
+---
 
 ## Evaluation
 
-Evaluate DDOT & ODEFormer with the command, parameter "use_ft_decoder" should be set accordingly:
+Evaluate DDOT & ODEFormer (set `"use_ft_decoder"` accordingly):
 
-```bash run_evaluation.sh```
+```bash
+bash run_evaluation.sh
+```
 
-Evaluate other baselinse with command:
+Evaluate other baselines:
 
-```bash run_baselines.sh```
+```bash
+bash run_baselines.sh
+```
 
-Gather the result table with command:
+Gather the result table:
 
-```python gather_result.py```
+```bash
+python gather_result.py
+```
+
+---
+
+## Running the Web App
+
+After installing dependencies or building the Docker image, start the FastAPI app:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+The app will be available at [http://localhost:8000](http://localhost:8000).
+
+---
+
+## Example Input/Output
+
+**Input:**  
+- Select a system ID (e.g., `0`)
+- Enter initial conditions (e.g., `1.0,1.0,1.0`)
+- Set time range and steps
+- Click "Simulate" to see the trajectory plot
+- Click "Predict ODE from Last Simulation" to see the predicted ODE
+
+**Output:**  
+- Simulation plot (PNG)
+- Original ODE (LaTeX)
+- Predicted ODE (LaTeX, side-by-side with original)
+
+---
+
+## Web UI Preview
+
+<!-- Replace the link below with your actual screenshot or GIF -->
+![Web UI Screenshot](docs/web_ui_sc1.png)
+
+---
+
+## Notes
+
+- For large equation sets, the app fetches only the requested equation for efficiency.
+- Simulation and prediction results are displayed inline, no page reloads required.
+
+---
+
+## License
+
+See [LICENSE](LICENSE) for details.
 
