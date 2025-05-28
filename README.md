@@ -101,8 +101,8 @@ The app will be available at [http://localhost:8000](http://localhost:8000).
 
 ## Notes
 
-- For large equation sets, the app fetches only the requested equation for efficiency.
-- Simulation and prediction results are displayed inline, no page reloads required.
+- Long simulation sequences or complex ODE systems may cause increased computation time during simulation or prediction.
+- For best performance, use moderate time ranges and step counts when exploring new systems.
 
 ---
 
