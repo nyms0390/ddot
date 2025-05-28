@@ -1,3 +1,5 @@
+import sympy as sp
+
 from scripts.inference import setup, fit
 
 params_args = [
@@ -32,4 +34,19 @@ evaluator, model, iterator, env, params = setup(params_args, path)
 
 def predict(sample):
     _, _, pred_tree = fit(sample, evaluator, model, env, params)
-    return pred_tree
+    expr = env.simplifier.tree_to_sympy_expr(pred_tree)
+    
+    latex_str = []
+
+    if isinstance(expr, sp.Matrix):
+        for row_expr in expr:
+            if isinstance(row_expr, sp.Matrix) and row_expr.shape == (1, 1):
+                latex_str.append(sp.latex(row_expr[0, 0]))
+            else:
+                latex_str.append(sp.latex(row_expr))
+    elif isinstance(expr, (list, tuple)):
+        for single_expr in expr:
+            latex_str.append(sp.latex(single_expr[0])) # Assuming single_expr is a list of expressions
+    else:
+        latex_str.append(sp.latex(expr))
+    return latex_str

@@ -65,7 +65,7 @@ def fit(samples, evaluator, model, env, params):
     if not "test" in samples.keys():
         samples = evaluator.prepare_test_trajectory(samples, evaluation_task=params.evaluation_task)
     times, trajectories = samples["train"]["times"], samples["train"]["trajectories"]
-    
+
     if "tree" in samples.keys():
         trees = [env.simplifier.simplify_tree(tree, expand=True) for tree in samples["tree"]]
     else:
@@ -78,7 +78,7 @@ def fit(samples, evaluator, model, env, params):
     start_time_fit = timer()
     all_candidates = model.fit(times, trajectories, verbose=False, sort_candidates=True)
     all_duration_fit = [timer() - start_time_fit] * len(times)
-
+    
     # Evaluate on train data
     best_results, best_candidates = evaluator._evaluate(
         original_times, original_trajectories, trees, all_candidates, all_duration_fit, params.validation_metrics

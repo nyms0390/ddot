@@ -7,12 +7,14 @@
 from abc import ABC
 import sympy as sp
 from sympy.parsing.sympy_parser import parse_expr
-from .generators import all_operators, math_constants, Node, NodeList
+from sympy.core.basic import preorder_traversal
 from sympy.core.rules import Transform
 from functools import partial
 import torch
-from ..utils import timeout, MyTimeoutError
 import concurrent.futures
+
+from .generators import all_operators, math_constants, Node, NodeList
+# from ..utils import timeout, MyTimeoutError
 
 class InvalidPrefixExpression(BaseException):
     pass
@@ -80,9 +82,9 @@ class Simplifier(ABC):
         for k in generator.variables:
             self.local_dict[k] = sp.Symbol(k, real=True, integer=False)
 
-    def simplify_tree(self, tree, expand=False, resimplify=False):
+    def simplify_tree(self, tree, expand=False, resimplify=False, round=False, decimals=3):
         if hasattr(tree, "nodes"):
-            return NodeList([self.simplify_tree(node, expand, resimplify) for node in tree.nodes])
+            return NodeList([self.simplify_tree(node, expand, resimplify, round, decimals) for node in tree.nodes])
         else:
             if tree is None:
                 return tree
@@ -94,7 +96,7 @@ class Simplifier(ABC):
             new_tree = self.sympy_expr_to_tree(expr)
             if new_tree is None:
                 return tree
-            else: 
+            else:
                 return new_tree.nodes[0]
         
     @classmethod
