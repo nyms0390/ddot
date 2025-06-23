@@ -1,6 +1,17 @@
 # DDOT
 
+This repository contains the official implementation of the paper **"DDOT: A Derivative-directed Dual-decoder Ordinary Differential Equation Transformer for Dynamic System Modeling"**. The article has been recently published; a formal citation will be provided here soon.
+
 A framework for symbolic regression and ODE discovery, featuring a web-based simulation and prediction interface.
+
+<!-- Future citation:
+@article{your_citation_key,
+  title={DDOT: A Derivative-directed Dual-decoder Ordinary Differential Equation Transformer for Dynamic System Modeling},
+  author={...},
+  journal={...},
+  year={202X}
+}
+-->
 
 ---
 
